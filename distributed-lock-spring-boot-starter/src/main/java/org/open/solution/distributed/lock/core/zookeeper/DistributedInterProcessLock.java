@@ -14,7 +14,7 @@ import java.util.concurrent.locks.Condition;
  * @date 2023/6/13
  **/
 @RequiredArgsConstructor
-public class DistributedInterProcessMutex implements DistributedLock {
+public class DistributedInterProcessLock implements DistributedLock {
 
   private final InterProcessLock lock;
 

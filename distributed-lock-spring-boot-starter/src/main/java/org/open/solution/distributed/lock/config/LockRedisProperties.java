@@ -10,4 +10,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  **/
 @ConfigurationProperties(prefix = "open.solution.distributed.lock.redis")
 public class LockRedisProperties {
+
+    private boolean enabled = true;
 }

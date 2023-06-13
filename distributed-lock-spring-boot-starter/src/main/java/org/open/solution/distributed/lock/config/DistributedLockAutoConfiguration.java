@@ -7,12 +7,15 @@ import org.open.solution.distributed.lock.core.DistributedLockClient;
 import org.open.solution.distributed.lock.core.DistributedLockFactory;
 import org.open.solution.distributed.lock.core.redis.DistributedRedissonClient;
 import org.open.solution.distributed.lock.core.zookeeper.DistributedCuratorFrameworkClient;
-import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.spring.starter.RedissonAutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 /**
  * DistributedLockAutoConfiguration class
@@ -21,7 +24,6 @@ import org.springframework.context.annotation.Configuration;
  * @date 2023/6/13
  **/
 @Configuration
-@EnableConfigurationProperties({LockRedisProperties.class, LockZooKeeperProperties.class})
 public class DistributedLockAutoConfiguration {
 
   @Bean
@@ -30,13 +32,10 @@ public class DistributedLockAutoConfiguration {
   }
 
   @Configuration
-//  @ConditionalOnProperty(value = "open.solution.distributed.lock.redis.enabled", havingValue = "true")
+  @EnableConfigurationProperties({LockRedisProperties.class})
+  @AutoConfigureAfter(RedissonAutoConfiguration.class)
+  @ConditionalOnProperty(value = "open.solution.distributed.lock.redis.enabled", havingValue = "true")
   protected static class DistributedLockRedisConfiguration {
-
-    @Bean
-    public RedissonClient redissonClient(LockRedisProperties lockRedisProperties) {
-      return Redisson.create(null);
-    }
 
     @Bean
     public DistributedLockClient distributedLockClient(RedissonClient redissonClient) {
@@ -46,12 +45,15 @@ public class DistributedLockAutoConfiguration {
 
   @Configuration
   @ConditionalOnProperty(value = "open.solution.distributed.lock.zk.enabled", havingValue = "true")
+  @EnableConfigurationProperties({LockZooKeeperProperties.class})
   protected static class DistributedLockZookeeperConfiguration {
 
     @Bean
     public CuratorFramework client(LockZooKeeperProperties lockZooKeeperProperties) {
       return CuratorFrameworkFactory.newClient(
-          "localhost:2181", new ExponentialBackoffRetry(1000, 3));
+              lockZooKeeperProperties.getConnectString(),
+              new ExponentialBackoffRetry(lockZooKeeperProperties.getBaseSleepTimeMs(),
+                      lockZooKeeperProperties.getMaxRetries()));
     }
 
     @Bean

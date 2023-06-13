@@ -22,6 +22,6 @@ public class DistributedCuratorFrameworkClient implements DistributedLockClient 
 
   @Override
   public DistributedLock getLock(String key) {
-    return new DistributedInterProcessMutex(new InterProcessMutex(client, key));
+    return new DistributedInterProcessLock(new InterProcessMutex(client, key));
   }
 }
