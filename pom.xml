@@ -11,6 +11,7 @@
         <module>distributed-lock-spring-boot-starter</module>
         <module>distributed-cache-spring-boot-starter</module>
         <module>distributed-test-spring-boot-starter</module>
+        <module>idempotent-spring-boot-starter</module>
     </modules>
 
     <properties>
