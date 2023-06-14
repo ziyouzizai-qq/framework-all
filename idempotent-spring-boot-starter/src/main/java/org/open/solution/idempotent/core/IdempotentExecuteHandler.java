@@ -30,10 +30,10 @@ public interface IdempotentExecuteHandler {
 //
 //    }
 
-//    /**
-//     * 后置处理
-//     */
-//    default void postProcessing() {
-//
-//    }
+    /**
+     * 后置处理
+     */
+    default void postProcessing() {
+
+    }
 }
