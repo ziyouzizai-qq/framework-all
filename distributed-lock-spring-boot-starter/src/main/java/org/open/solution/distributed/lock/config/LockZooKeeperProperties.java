@@ -13,8 +13,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Getter
 public class LockZooKeeperProperties {
 
-    private boolean enabled = false;
-
     private String connectString = "localhost:2181";
 
     private int baseSleepTimeMs = 100;

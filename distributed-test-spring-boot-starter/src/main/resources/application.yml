@@ -1,0 +1,9 @@
+server:
+  port: 8000
+
+open:
+  solution:
+    distributed:
+      lock:
+        enabled: true
+#        type: zk
