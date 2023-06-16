@@ -33,10 +33,6 @@ public class IdempotentContext {
    */
   public static DistributedLock getLock() {
     Deque<DistributedLock> lockList = CONTEXT.get();
-    if (CollectionUtils.isEmpty(lockList)) {
-      CONTEXT.remove();
-      return null;
-    }
     DistributedLock distributedLock = lockList.removeLast();
     if (CollectionUtils.isEmpty(lockList)) {
       CONTEXT.remove();

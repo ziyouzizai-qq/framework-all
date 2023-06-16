@@ -31,8 +31,12 @@ public class LockBlockHandler extends AbstractIdempotentLevelHandler {
         String lockKey = param.getLockKey();
         DistributedLock lock = distributedLockFactory.getLock(lockKey);
         if (!lock.tryLock()) {
+            IdempotentContext.putLock(null);
             throw new IdempotentException(param.getIdempotent().message());
         } else {
+            // 将分布式锁放入上下文
+            IdempotentContext.putLock(lock);
+            // 执行业务层校验接口
             Boolean validate = (Boolean) spELParser.parse(param.getIdempotent().validateApi(),
                 ((MethodSignature) param.getJoinPoint().getSignature()).getMethod(),
                 param.getJoinPoint().getArgs());
@@ -41,7 +45,6 @@ public class LockBlockHandler extends AbstractIdempotentLevelHandler {
                 throw new IdempotentException(param.getIdempotent().message());
             }
         }
-        IdempotentContext.putLock(lock);
     }
 
     @Override
