@@ -11,9 +11,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class IdempotentService {
 
+  private volatile boolean f;
+
   public boolean validateData(UiIdempotent uiIdempotent) {
-    System.out.println(uiIdempotent.getId());
-    System.out.println(uiIdempotent.getOther());
-    return true;
+    boolean result = !f;
+    if (result) {
+      f = true;
+    }
+    return result;
   }
 }

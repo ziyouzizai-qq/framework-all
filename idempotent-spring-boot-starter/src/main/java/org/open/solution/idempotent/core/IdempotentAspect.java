@@ -1,6 +1,7 @@
 package org.open.solution.idempotent.core;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -16,6 +17,7 @@ import java.lang.reflect.Method;
  **/
 @Aspect
 @RequiredArgsConstructor
+@Slf4j
 public class IdempotentAspect {
 
   private final IdempotentExecuteHandlerFactory idempotentExecuteHandlerFactory;
@@ -35,8 +37,7 @@ public class IdempotentAspect {
       return joinPoint.proceed();
     } catch (IdempotentException ex) {
       // log
-
-      System.out.println(ex.errorMessage);
+      log.warn(ex.errorMessage);
       throw ex;
     } finally {
       idempotentLevelHandler.postProcessing();
