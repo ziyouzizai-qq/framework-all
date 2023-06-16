@@ -22,6 +22,9 @@ public class DistributedCuratorFrameworkClient implements DistributedLockClient 
 
   @Override
   public DistributedLock getLock(String key) {
+    if (!key.startsWith("/")) {
+      key = "/" + key;
+    }
     return new DistributedInterProcessLock(new InterProcessMutex(client, key));
   }
 }

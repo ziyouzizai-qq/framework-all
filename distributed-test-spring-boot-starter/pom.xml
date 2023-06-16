@@ -44,7 +44,7 @@
         </dependency>
         <dependency>
             <groupId>org.open.solution</groupId>
-            <artifactId>distributed-lock-spring-boot-starter</artifactId>
+            <artifactId>idempotent-spring-boot-starter</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>

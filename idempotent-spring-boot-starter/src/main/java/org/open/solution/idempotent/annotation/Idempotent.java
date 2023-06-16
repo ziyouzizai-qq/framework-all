@@ -1,5 +1,6 @@
 package org.open.solution.idempotent.annotation;
 
+import org.open.solution.idempotent.core.LockBlockHandler;
 import org.open.solution.idempotent.enums.IdempotentSceneEnum;
 import org.open.solution.idempotent.enums.IdempotentTypeEnum;
 
@@ -28,9 +29,15 @@ public @interface Idempotent {
     IdempotentTypeEnum type() default IdempotentTypeEnum.PARAM;
 
     /**
-     * 验证幂等场景，支持多种 {@link IdempotentSceneEnum}
+     * 验证幂等场景, 默认为块级幂等校验
      */
-    IdempotentSceneEnum scene() default IdempotentSceneEnum.RESTAPI;
+    String level() default LockBlockHandler.BLOCK;
+
+    /**
+     * BLOCK 情况需要业务层校验
+     * @return
+     */
+    String validateApi() default "@lockBlockHandler.validateData()";
 
     /**
      * 设置防重令牌 Key 前缀，MQ 幂等去重可选设置

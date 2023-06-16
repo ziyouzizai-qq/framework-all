@@ -2,6 +2,7 @@ package org.open.solution.idempotent.core;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.open.solution.idempotent.annotation.Idempotent;
+import org.open.solution.idempotent.enums.IdempotentTypeEnum;
 
 /**
  * 幂等执行处理器
@@ -9,31 +10,18 @@ import org.open.solution.idempotent.annotation.Idempotent;
 public interface IdempotentExecuteHandler {
 
     /**
-     * 幂等处理逻辑
-     *
-     * @param wrapper 幂等参数包装器
+     * 幂等性级别
+     * @return
      */
-    void handler(IdempotentParamWrapper wrapper);
+    IdempotentTypeEnum type();
 
     /**
      * 执行幂等处理逻辑
      *
      * @param joinPoint  AOP 方法处理
      * @param idempotent 幂等注解
+     * @param idempotentLevelHandler 幂等处理级别
      */
-    void execute(ProceedingJoinPoint joinPoint, Idempotent idempotent);
+    void execute(ProceedingJoinPoint joinPoint, Idempotent idempotent, IdempotentLevelHandler idempotentLevelHandler);
 
-//    /**
-//     * 异常流程处理
-//     */
-//    default void exceptionProcessing() {
-//
-//    }
-
-    /**
-     * 后置处理
-     */
-    default void postProcessing() {
-
-    }
 }

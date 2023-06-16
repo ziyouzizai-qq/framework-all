@@ -1,5 +1,6 @@
 package org.open.solution.idempotent.annotation;
 
+import org.open.solution.idempotent.core.LockBlockHandler;
 import org.open.solution.idempotent.enums.IdempotentSceneEnum;
 
 import java.lang.annotation.*;
@@ -8,7 +9,7 @@ import java.lang.annotation.*;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Idempotent(scene = IdempotentSceneEnum.MQ)
+@Idempotent()
 public @interface MQIdempotent {
 
 //    /**
