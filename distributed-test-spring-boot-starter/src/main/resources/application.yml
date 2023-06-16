@@ -6,4 +6,4 @@ open:
     distributed:
       lock:
         enabled: true
-#        type: zk
+        type: zk

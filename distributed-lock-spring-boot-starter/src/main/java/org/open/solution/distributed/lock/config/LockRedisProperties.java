@@ -10,15 +10,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author nj
  * @date 2023/6/13
  **/
-@ConfigurationProperties("open.solution.distributed.lock.zk")
+@ConfigurationProperties("open.solution.distributed.lock.redis")
 @Getter
 @Setter
-public class LockZooKeeperProperties {
+public class LockRedisProperties {
 
-    private String connectString = "localhost:2181";
+    private String address;
 
-    private int baseSleepTimeMs = 100;
+    private String password;
 
-    private int maxRetries = 3;
+    private int database;
 
 }

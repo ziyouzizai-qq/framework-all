@@ -7,14 +7,18 @@ import org.open.solution.distributed.lock.core.DistributedLockClient;
 import org.open.solution.distributed.lock.core.DistributedLockFactory;
 import org.open.solution.distributed.lock.core.redis.DistributedRedissonClient;
 import org.open.solution.distributed.lock.core.zookeeper.DistributedCuratorFrameworkClient;
-import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.redisson.spring.starter.RedissonAutoConfiguration;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 
 /**
  * DistributedLockAutoConfiguration class
@@ -23,7 +27,7 @@ import org.springframework.context.annotation.Configuration;
  * @date 2023/6/13
  **/
 @Configuration
-@ConditionalOnProperty(prefix = "open.solution.distributed.lock", name = "enabled", havingValue = "true")
+@AutoConfigureAfter(RedissonAutoConfiguration.class)
 public class DistributedLockAutoConfiguration {
 
   @Bean
@@ -32,8 +36,8 @@ public class DistributedLockAutoConfiguration {
   }
 
   @Configuration
-  @ConditionalOnClass(Redisson.class)
   @ConditionalOnProperty(prefix = "open.solution.distributed.lock", name = "type", havingValue = "redis", matchIfMissing = true)
+  @EnableConfigurationProperties({LockRedisProperties.class})
   protected static class DistributedLockRedisConfiguration {
 
     @Bean
@@ -45,7 +49,7 @@ public class DistributedLockAutoConfiguration {
   @Configuration
   @ConditionalOnProperty(prefix = "open.solution.distributed.lock", name = "type", havingValue = "zk")
   @EnableConfigurationProperties({LockZooKeeperProperties.class})
-  @AutoConfiguration
+  @AutoConfigureAfter(RedissonAutoConfiguration.class)
   protected static class DistributedLockZookeeperConfiguration {
 
     @Bean
@@ -60,6 +64,13 @@ public class DistributedLockAutoConfiguration {
     public DistributedLockClient distributedLockClient(CuratorFramework client) {
       return new DistributedCuratorFrameworkClient(client);
     }
+
+
   }
 
+  @Bean
+  @ConditionalOnProperty(prefix = "open.solution.distributed.lock", name = "enabled", havingValue = "false")
+  public AutoConfigureAfterExclude redissonAutoConfigAfterExclude() {
+    return new AutoConfigureAfterExclude(RedissonAutoConfiguration.class);
+  }
 }
