@@ -6,7 +6,7 @@ import org.open.solution.idempotent.enums.IdempotentTypeEnum;
 
 import java.lang.annotation.*;
 
-@Target({ElementType.TYPE, ElementType.METHOD})
+@Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Idempotent {
