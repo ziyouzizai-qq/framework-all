@@ -2,6 +2,9 @@ package org.open.solution.distributed.test.idempotent;
 
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * IdempotentService class
  *
@@ -11,13 +14,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class IdempotentService {
 
-  private volatile boolean f;
+  private Map<String, UiIdempotent> map = new HashMap<>();
 
   public boolean validateData(UiIdempotent uiIdempotent) {
-    boolean result = !f;
-    if (result) {
-      f = true;
-    }
-    return result;
+    return !map.containsKey(uiIdempotent.getId());
+  }
+
+  public void add(UiIdempotent uiIdempotent) {
+    map.put(uiIdempotent.getId(), uiIdempotent);
   }
 }

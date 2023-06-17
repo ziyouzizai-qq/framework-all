@@ -6,7 +6,7 @@ import org.open.solution.idempotent.core.IdempotentExecuteHandler;
 import org.open.solution.idempotent.core.IdempotentExecuteHandlerFactory;
 import org.open.solution.idempotent.core.IdempotentLevelHandler;
 import org.open.solution.idempotent.core.IdempotentLevelHandlerFactory;
-import org.open.solution.idempotent.core.LockBlockHandler;
+import org.open.solution.idempotent.core.IdempotentDclHandler;
 import org.open.solution.idempotent.core.param.IdempotentParamExecuteHandler;
 import org.open.solution.idempotent.toolkit.SpELParser;
 import org.springframework.beans.factory.BeanFactory;
@@ -56,8 +56,8 @@ public class IdempotentAutoConfiguration {
    * @param spELParser spel解析器
    */
   @Bean
-  public LockBlockHandler lockBlockHandler(DistributedLockFactory distributedLockFactory, SpELParser spELParser) {
-    return new LockBlockHandler(distributedLockFactory, spELParser);
+  public IdempotentDclHandler lockBlockHandler(DistributedLockFactory distributedLockFactory, SpELParser spELParser) {
+    return new IdempotentDclHandler(distributedLockFactory, spELParser);
   }
 
   @Bean

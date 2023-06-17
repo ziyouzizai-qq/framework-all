@@ -7,15 +7,12 @@ import org.open.solution.distributed.lock.core.DistributedLockFactory;
 import org.open.solution.idempotent.toolkit.SpELParser;
 
 /**
- * 区域性幂等处理器
+ * DCL幂等处理器
  */
 @RequiredArgsConstructor
-public class LockBlockHandler extends AbstractIdempotentLevelHandler {
+public class IdempotentDclHandler extends AbstractIdempotentLevelHandler {
 
-    /**
-     * 块级别的只控制释放锁之前的幂等，完全的幂等，需要callValidateApi
-     */
-    public static final String BLOCK = "BLOCK";
+    public static final String DCL = "DCL";
 
     private final DistributedLockFactory distributedLockFactory;
 
@@ -23,25 +20,24 @@ public class LockBlockHandler extends AbstractIdempotentLevelHandler {
 
     @Override
     public String level() {
-        return BLOCK;
+        return DCL;
     }
 
     @Override
     public void validateIdempotent(IdempotentValidateParam param) {
-        String lockKey = param.getLockKey();
-        DistributedLock lock = distributedLockFactory.getLock(lockKey);
+        if (param.getIdempotent().enableProCheck() && !validateData(param)) {
+            IdempotentContext.putLock(null);
+            throw new IdempotentException(param.getIdempotent().message());
+        }
+
+        DistributedLock lock = distributedLockFactory.getLock(param.getLockKey());
         if (!lock.tryLock()) {
             IdempotentContext.putLock(null);
             throw new IdempotentException(param.getIdempotent().message());
         } else {
             // 将分布式锁放入上下文
             IdempotentContext.putLock(lock);
-            // 执行业务层校验接口
-            Boolean validate = (Boolean) spELParser.parse(param.getIdempotent().validateApi(),
-                ((MethodSignature) param.getJoinPoint().getSignature()).getMethod(),
-                param.getJoinPoint().getArgs());
-
-            if (!validate) {
+            if (!validateData(param)) {
                 throw new IdempotentException(param.getIdempotent().message());
             }
         }
@@ -61,5 +57,14 @@ public class LockBlockHandler extends AbstractIdempotentLevelHandler {
 
     public boolean validateData() {
         return true;
+    }
+
+
+    private Boolean validateData(IdempotentValidateParam param) {
+        // 执行业务层校验接口
+        Boolean validate = (Boolean) spELParser.parse(param.getIdempotent().validateApi(),
+                ((MethodSignature) param.getJoinPoint().getSignature()).getMethod(),
+                param.getJoinPoint().getArgs());
+        return validate;
     }
 }

@@ -16,19 +16,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class LockApp {
 
-//  private final DistributedLockFactory distributedLockFactory;
+  private final DistributedLockFactory distributedLockFactory;
 
   @GetMapping("/lock")
   public String lock() {
-//    DistributedLock l1 = distributedLockFactory.getLock("/l1");
-//    try {
-//      l1.lock();
-//      Thread.sleep(10 * 1000);
-//    } catch (InterruptedException e) {
-//      e.printStackTrace();
-//    } finally {
-//      l1.unlock();
-//    }
+    DistributedLock l1 = distributedLockFactory.getLock("/l1");
+    try {
+      l1.lock();
+      Thread.sleep(10 * 1000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } finally {
+      l1.unlock();
+    }
     return "OK";
   }
 
