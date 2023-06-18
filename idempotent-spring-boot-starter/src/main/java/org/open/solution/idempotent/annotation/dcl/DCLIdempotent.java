@@ -29,7 +29,7 @@ public @interface DCLIdempotent {
      * BLOCK 情况需要业务层校验
      */
     @AliasFor(annotation = Idempotent.class, attribute = "validateApi")
-    String validateApi() default "@lockBlockHandler.validateData()";
+    String validateApi() default "@idempotentDclHandler.validateData()";
 
     /**
      * 触发幂等失败逻辑时，返回的错误提示信息

@@ -1,6 +1,7 @@
 package org.open.solution.distributed.test.idempotent;
 
 import lombok.RequiredArgsConstructor;
+import org.open.solution.idempotent.annotation.dcl.DCLParamIdempotent;
 import org.open.solution.idempotent.annotation.dcl.DCLSpELIdempotent;
 import org.open.solution.idempotent.annotation.token.TokenIdempotent;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +23,9 @@ public class IdempotentApp {
   private IdempotentService idempotentService;
 
   @PostMapping("/idempotent/dcl")
-  @DCLSpELIdempotent(
+  @DCLParamIdempotent(
           validateApi = "@idempotentService.validateData(#uiIdempotent)",
-          partKey = "#uiIdempotent.getId()",
+//          partKey = "#uiIdempotent.getId()",
           message = "操作次数过多")
   public String idempotentDCL(@RequestBody UiIdempotent uiIdempotent) {
 

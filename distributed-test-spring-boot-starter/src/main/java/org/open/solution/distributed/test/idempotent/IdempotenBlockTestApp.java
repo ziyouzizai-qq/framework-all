@@ -31,10 +31,10 @@ public class IdempotenBlockTestApp {
         AtomicInteger success = new AtomicInteger();
 
         AtomicInteger fail = new AtomicInteger();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 100000; i++) {
             Runnable worker = () -> {
                 try {
-                    idempotentApp.idempotentToken(uiIdempotent);
+                    idempotentApp.idempotentDCL(uiIdempotent);
                     success.incrementAndGet();
                 } catch (Exception ex) {
                     fail.incrementAndGet();
@@ -43,7 +43,7 @@ public class IdempotenBlockTestApp {
             executor.execute(worker);
         }
 
-        Thread.sleep(10 * 1000);
+        Thread.sleep(30 * 1000);
 
         return "success: " + success.get() + " ,fail: " + fail.get();
     }

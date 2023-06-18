@@ -17,7 +17,7 @@ public @interface TokenIdempotent {
      * 通过spEl表达式获取token
      */
     @AliasFor(annotation = Idempotent.class, attribute = "partKey")
-    String partKey() default "";
+    String partKey() default "@idempotentTokenExecuteHandler.defaultToken()";
 
     /**
      * 触发幂等失败逻辑时，返回的错误提示信息

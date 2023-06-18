@@ -41,6 +41,6 @@ public @interface Idempotent {
      * BLOCK 情况需要业务层校验
      * @return
      */
-    String validateApi() default "@lockBlockHandler.validateData()";
+    String validateApi() default "@idempotentDclHandler.validateData()";
 
 }

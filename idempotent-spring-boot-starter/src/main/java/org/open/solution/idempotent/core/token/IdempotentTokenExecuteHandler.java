@@ -30,14 +30,14 @@ public final class IdempotentTokenExecuteHandler extends AbstractIdempotentTempl
 
     @Override
     protected void buildValidateParam(IdempotentValidateParam idempotentValidateParam) {
-        HttpServletRequest request = ((ServletRequestAttributes) (RequestContextHolder.currentRequestAttributes())).getRequest();
-        String token = request.getHeader(TOKEN_KEY);
+        String token = (String) spELParser.parse(idempotentValidateParam.getIdempotent().partKey(),
+                ((MethodSignature) idempotentValidateParam.getJoinPoint().getSignature()).getMethod(),
+                idempotentValidateParam.getJoinPoint().getArgs());
         if (StrUtil.isBlank(token)) {
-            token = request.getParameter(TOKEN_KEY);
+            HttpServletRequest request = ((ServletRequestAttributes) (RequestContextHolder.currentRequestAttributes())).getRequest();
+            token = request.getHeader(TOKEN_KEY);
             if (StrUtil.isBlank(token)) {
-                token = (String) spELParser.parse(idempotentValidateParam.getIdempotent().partKey(),
-                        ((MethodSignature) idempotentValidateParam.getJoinPoint().getSignature()).getMethod(),
-                        idempotentValidateParam.getJoinPoint().getArgs());
+                token = request.getParameter(TOKEN_KEY);
                 if (StrUtil.isBlank(token)) {
                     throw new TokenNotFoundException("token not found.");
                 }
@@ -58,6 +58,10 @@ public final class IdempotentTokenExecuteHandler extends AbstractIdempotentTempl
         String token = lockKey(uuid);
         stringRedisTemplate.opsForValue().set(token, "", TOKEN_EXPIRED_TIME, TimeUnit.MILLISECONDS);
         return uuid;
+    }
+
+    public String defaultToken() {
+        return "";
     }
 
     private String lockKey(String uuid) {
