@@ -1,17 +1,19 @@
 package org.open.solution.idempotent.config;
 
 import org.open.solution.distributed.lock.core.DistributedLockFactory;
-import org.open.solution.idempotent.core.IdempotentAspect;
-import org.open.solution.idempotent.core.IdempotentExecuteHandler;
-import org.open.solution.idempotent.core.IdempotentExecuteHandlerFactory;
-import org.open.solution.idempotent.core.IdempotentLevelHandler;
-import org.open.solution.idempotent.core.IdempotentLevelHandlerFactory;
-import org.open.solution.idempotent.core.IdempotentDclHandler;
+import org.open.solution.idempotent.core.*;
 import org.open.solution.idempotent.core.param.IdempotentParamExecuteHandler;
+import org.open.solution.idempotent.core.spel.IdempotentSpELExecuteHandler;
+import org.open.solution.idempotent.core.token.IdempotentTokenController;
+import org.open.solution.idempotent.core.token.IdempotentTokenExecuteHandler;
+import org.open.solution.idempotent.core.token.IdempotentTokenHandler;
+import org.open.solution.idempotent.core.token.IdempotentTokenService;
 import org.open.solution.idempotent.toolkit.SpELParser;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.StringRedisTemplate;
+
 import java.util.Set;
 
 /**
@@ -20,7 +22,6 @@ import java.util.Set;
  * @author nj
  * @date 2023/6/15
  **/
-//@EnableConfigurationProperties(IdempotentProperties.class)
 @Configuration
 public class IdempotentAutoConfiguration {
 
@@ -33,17 +34,43 @@ public class IdempotentAutoConfiguration {
     return new IdempotentAspect(idempotentExecuteHandlerFactory, idempotentLevelHandlerFactory);
   }
 
+  /**
+   * 幂等执行器工厂
+   */
   @Bean
   public IdempotentExecuteHandlerFactory idempotentExecuteHandlerFactory(
       Set<IdempotentExecuteHandler> idempotentExecuteHandlers) {
     return new IdempotentExecuteHandlerFactory(idempotentExecuteHandlers);
   }
 
+  /**
+   * 全参数幂等器
+   */
   @Bean
   public IdempotentParamExecuteHandler idempotentParamExecuteHandler() {
     return new IdempotentParamExecuteHandler();
   }
 
+  /**
+   * 通过spel解析，部分参数幂等器
+   */
+  @Bean
+  public IdempotentSpELExecuteHandler idempotentSpELExecuteHandler(SpELParser spELParser) {
+    return new IdempotentSpELExecuteHandler(spELParser);
+  }
+
+  /**
+   * token幂等器
+   */
+  @Bean
+  public IdempotentTokenExecuteHandler idempotentTokenExecuteHandler(SpELParser spELParser,
+                                                                     StringRedisTemplate stringRedisTemplate) {
+    return new IdempotentTokenExecuteHandler(spELParser, stringRedisTemplate);
+  }
+
+  /**
+   * 幂等模式级别工厂
+   */
   @Bean
   public IdempotentLevelHandlerFactory idempotentLevelHandlerFactory(
       Set<IdempotentLevelHandler> idempotentLevelHandlers) {
@@ -51,64 +78,37 @@ public class IdempotentAutoConfiguration {
   }
 
   /**
-   * 区域锁
+   * DCL模式幂等
    * @param distributedLockFactory 分布式锁工厂
    * @param spELParser spel解析器
    */
   @Bean
-  public IdempotentDclHandler lockBlockHandler(DistributedLockFactory distributedLockFactory, SpELParser spELParser) {
+  public IdempotentDclHandler idempotentDclHandler(DistributedLockFactory distributedLockFactory, SpELParser spELParser) {
     return new IdempotentDclHandler(distributedLockFactory, spELParser);
   }
 
+  /**
+   * token模式幂等
+   */
+  @Bean
+  public IdempotentTokenHandler idempotentTokenHandler(StringRedisTemplate stringRedisTemplate) {
+    return new IdempotentTokenHandler(stringRedisTemplate);
+  }
+
+  /**
+   * spel解析器
+   */
   @Bean
   public SpELParser spELParser(BeanFactory beanFactory) {
     return new SpELParser(beanFactory);
   }
 
+  /**
+   * token模式下，获取token接口
+   */
+  @Bean
+  public IdempotentTokenController idempotentTokenController(IdempotentTokenService idempotentTokenService) {
+    return new IdempotentTokenController(idempotentTokenService);
+  }
 
-//
-//  /**
-//   * 参数方式幂等实现，基于 RestAPI 场景
-//   */
-//  @Bean
-//  @ConditionalOnMissingBean
-//  public IdempotentParamService idempotentParamExecuteHandler(RedissonClient redissonClient) {
-//    return new IdempotentParamExecuteHandler(redissonClient);
-//  }
-//
-//  /**
-//   * Token 方式幂等实现，基于 RestAPI 场景
-//   */
-//  @Bean
-//  @ConditionalOnMissingBean
-//  public IdempotentTokenService idempotentTokenExecuteHandler(DistributedCache distributedCache,
-//                                                              IdempotentProperties idempotentProperties) {
-//    return new IdempotentTokenExecuteHandler(distributedCache, idempotentProperties);
-//  }
-//
-//  /**
-//   * 申请幂等 Token 控制器，基于 RestAPI 场景
-//   */
-//  @Bean
-//  public IdempotentTokenController idempotentTokenController(IdempotentTokenService idempotentTokenService) {
-//    return new IdempotentTokenController(idempotentTokenService);
-//  }
-//
-//  /**
-//   * SpEL 方式幂等实现，基于 RestAPI 场景
-//   */
-//  @Bean
-//  @ConditionalOnMissingBean
-//  public IdempotentSpELService idempotentSpELByRestAPIExecuteHandler(RedissonClient redissonClient) {
-//    return new IdempotentSpELByRestAPIExecuteHandler(redissonClient);
-//  }
-//
-//  /**
-//   * SpEL 方式幂等实现，基于 MQ 场景
-//   */
-//  @Bean
-//  @ConditionalOnMissingBean
-//  public IdempotentSpELByMQExecuteHandler idempotentSpELByMQExecuteHandler(DistributedCache distributedCache) {
-//    return new IdempotentSpELByMQExecuteHandler(distributedCache);
-//  }
 }

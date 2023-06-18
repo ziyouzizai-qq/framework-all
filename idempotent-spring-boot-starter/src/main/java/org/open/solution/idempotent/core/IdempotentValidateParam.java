@@ -23,11 +23,6 @@ public class IdempotentValidateParam {
     private ProceedingJoinPoint joinPoint;
 
     /**
-     * 路径
-     */
-    private String path;
-
-    /**
      * 锁标识
      */
     private String lockKey;

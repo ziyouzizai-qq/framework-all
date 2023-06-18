@@ -11,12 +11,10 @@ public abstract class AbstractIdempotentTemplate implements IdempotentExecuteHan
     /**
      * 构建幂等验证过程中所需要的参数包装器
      *
-     * @param joinPoint AOP 方法处理
+     * @param idempotentValidateParam AOP 方法处理
      * @return 幂等参数包装器
      */
-    protected abstract void buildValidateParam(ProceedingJoinPoint joinPoint,
-                                               Idempotent idempotent,
-                                               IdempotentValidateParam idempotentValidateParam);
+    protected abstract void buildValidateParam(IdempotentValidateParam idempotentValidateParam);
 
     /**
      * 执行幂等处理逻辑
@@ -30,7 +28,7 @@ public abstract class AbstractIdempotentTemplate implements IdempotentExecuteHan
         IdempotentValidateParam idempotentValidateParam = IdempotentValidateParam.builder()
             .joinPoint(joinPoint)
             .idempotent(idempotent).build();
-        buildValidateParam(joinPoint, idempotent, idempotentValidateParam);
+        buildValidateParam(idempotentValidateParam);
         idempotentLevelHandler.validateIdempotent(idempotentValidateParam);
     }
 }

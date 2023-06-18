@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.open.solution.distributed.lock.core.DistributedLock;
 import org.open.solution.distributed.lock.core.DistributedLockFactory;
+import org.open.solution.idempotent.enums.IdempotentSceneEnum;
 import org.open.solution.idempotent.toolkit.SpELParser;
 
 /**
@@ -12,15 +13,13 @@ import org.open.solution.idempotent.toolkit.SpELParser;
 @RequiredArgsConstructor
 public class IdempotentDclHandler extends AbstractIdempotentLevelHandler {
 
-    public static final String DCL = "DCL";
-
     private final DistributedLockFactory distributedLockFactory;
 
     private final SpELParser spELParser;
 
     @Override
-    public String level() {
-        return DCL;
+    public IdempotentSceneEnum scene() {
+        return IdempotentSceneEnum.DCL;
     }
 
     @Override

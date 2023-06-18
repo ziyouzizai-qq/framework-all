@@ -8,4 +8,9 @@ package org.open.solution.idempotent.core;
  **/
 public abstract class AbstractIdempotentLevelHandler implements IdempotentLevelHandler {
 
+    @Override
+    public void postProcessing() {
+
+    }
+
 }

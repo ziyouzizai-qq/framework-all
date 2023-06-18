@@ -26,15 +26,15 @@ public class IdempotenBlockTestApp {
     @Autowired
     private IdempotentApp idempotentApp;
 
-    @PostMapping("/idempotent/blocks")
+    @PostMapping("/idempotent/test")
     public String idempotentBlocks(@RequestBody UiIdempotent uiIdempotent) throws InterruptedException {
         AtomicInteger success = new AtomicInteger();
 
         AtomicInteger fail = new AtomicInteger();
-        for (int i = 0; i < 100000; i++) {
+        for (int i = 0; i < 100; i++) {
             Runnable worker = () -> {
                 try {
-                    idempotentApp.idempotentBlock(uiIdempotent);
+                    idempotentApp.idempotentToken(uiIdempotent);
                     success.incrementAndGet();
                 } catch (Exception ex) {
                     fail.incrementAndGet();
@@ -43,7 +43,7 @@ public class IdempotenBlockTestApp {
             executor.execute(worker);
         }
 
-        Thread.sleep(20 * 1000);
+        Thread.sleep(10 * 1000);
 
         return "success: " + success.get() + " ,fail: " + fail.get();
     }

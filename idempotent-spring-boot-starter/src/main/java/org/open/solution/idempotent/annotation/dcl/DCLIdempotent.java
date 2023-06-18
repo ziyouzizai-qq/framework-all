@@ -1,15 +1,16 @@
-package org.open.solution.idempotent.annotation;
+package org.open.solution.idempotent.annotation.dcl;
 
-import org.open.solution.idempotent.core.IdempotentDclHandler;
+import org.open.solution.idempotent.annotation.Idempotent;
+import org.open.solution.idempotent.enums.IdempotentSceneEnum;
 import org.open.solution.idempotent.enums.IdempotentTypeEnum;
 import org.springframework.core.annotation.AliasFor;
 
 import java.lang.annotation.*;
 
-@Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})
+@Target(ElementType.ANNOTATION_TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Idempotent(level = IdempotentDclHandler.DCL)
+@Idempotent(scene = IdempotentSceneEnum.DCL)
 public @interface DCLIdempotent {
 
     /**

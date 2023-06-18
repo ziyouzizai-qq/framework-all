@@ -1,12 +1,14 @@
 package org.open.solution.idempotent.core;
 
+import org.open.solution.idempotent.enums.IdempotentSceneEnum;
+
 public interface IdempotentLevelHandler {
 
     /**
      * 幂等性级别
      * @return
      */
-    String level();
+    IdempotentSceneEnum scene();
 
     /**
      * 幂等性校验

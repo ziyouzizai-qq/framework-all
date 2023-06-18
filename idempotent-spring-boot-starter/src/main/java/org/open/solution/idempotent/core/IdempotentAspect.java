@@ -1,13 +1,14 @@
 package org.open.solution.idempotent.core;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.open.solution.idempotent.annotation.Idempotent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 
 import java.lang.reflect.Method;
@@ -20,7 +21,6 @@ import java.lang.reflect.Method;
  **/
 @Aspect
 @RequiredArgsConstructor
-@Slf4j
 public class IdempotentAspect {
 
   private final IdempotentExecuteHandlerFactory idempotentExecuteHandlerFactory;
@@ -34,22 +34,24 @@ public class IdempotentAspect {
   public Object idempotentHandler(ProceedingJoinPoint joinPoint) throws Throwable {
     Idempotent idempotent = getIdempotent(joinPoint);
     IdempotentExecuteHandler idempotentExecuteHandler = idempotentExecuteHandlerFactory.getInstance(idempotent.type());
-    IdempotentLevelHandler idempotentLevelHandler = idempotentLevelHandlerFactory.getInstance(idempotent.level());
+    IdempotentLevelHandler idempotentLevelHandler = idempotentLevelHandlerFactory.getInstance(idempotent.scene());
     try {
       idempotentExecuteHandler.execute(joinPoint, idempotent, idempotentLevelHandler);
       return joinPoint.proceed();
-    } catch (IdempotentException ex) {
-      // log
-      log.warn(ex.errorMessage);
-      throw ex;
+    } catch (IdempotentException e) {
+      Logger logger = LoggerFactory.getLogger(joinPoint.getTarget().getClass());
+      logger.error("{}() method, idempotent exception occurred, error message：{}",
+              joinPoint.getSignature().getName(),
+              e.getMessage());
+      throw e;
     } finally {
       idempotentLevelHandler.postProcessing();
     }
   }
 
-  @Pointcut("@annotation(org.open.solution.idempotent.annotation.Idempotent) ||" +
-          "@annotation(org.open.solution.idempotent.annotation.DCLIdempotent) ||" +
-          "@annotation(org.open.solution.idempotent.annotation.DCLParamIdempotent)")
+  @Pointcut("@annotation(org.open.solution.idempotent.annotation.token.TokenIdempotent) ||" +
+          "@annotation(org.open.solution.idempotent.annotation.dcl.DCLParamIdempotent) ||" +
+          "@annotation(org.open.solution.idempotent.annotation.dcl.DCLSpELIdempotent)")
   public void idempotentMethods() {}
 
   public static Idempotent getIdempotent(ProceedingJoinPoint joinPoint) throws NoSuchMethodException {

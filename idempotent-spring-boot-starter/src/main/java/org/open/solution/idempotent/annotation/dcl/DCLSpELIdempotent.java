@@ -1,5 +1,6 @@
-package org.open.solution.idempotent.annotation;
+package org.open.solution.idempotent.annotation.dcl;
 
+import org.open.solution.idempotent.annotation.Idempotent;
 import org.open.solution.idempotent.enums.IdempotentTypeEnum;
 import org.springframework.core.annotation.AliasFor;
 
@@ -8,8 +9,14 @@ import java.lang.annotation.*;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@DCLIdempotent(type = IdempotentTypeEnum.PARAM)
-public @interface DCLParamIdempotent {
+@DCLIdempotent(type = IdempotentTypeEnum.SPEL)
+public @interface DCLSpELIdempotent {
+
+    /**
+     * 幂等Key，只有在 {@link Idempotent#type()} 为 {@link IdempotentTypeEnum#SPEL} 时生效
+     */
+    @AliasFor(annotation = Idempotent.class, attribute = "partKey")
+    String partKey();
 
     /**
      * DCL校验机制是否开启前置检查

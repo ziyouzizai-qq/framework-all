@@ -20,8 +20,11 @@ public class IdempotentParamExecuteHandler extends AbstractIdempotentTemplate im
   }
 
   @Override
-  protected void buildValidateParam(ProceedingJoinPoint joinPoint, Idempotent idempotent, IdempotentValidateParam idempotentValidateParam) {
-    String lockKey = String.format("idempotent:path:%s:currentUserId:%s:md5:%s", getPath(joinPoint), getCurrentUserId(), calcArgsMD5(joinPoint));
+  protected void buildValidateParam(IdempotentValidateParam idempotentValidateParam) {
+    String lockKey = String.format("idempotent:path:%s:currentUserId:%s:md5:%s",
+            getPath(idempotentValidateParam.getJoinPoint()),
+            getCurrentUserId(),
+            calcArgsMD5(idempotentValidateParam.getJoinPoint()));
     idempotentValidateParam.setLockKey(lockKey);
   }
 }

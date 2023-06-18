@@ -1,5 +1,7 @@
 package org.open.solution.idempotent.core;
 
+import org.open.solution.idempotent.enums.IdempotentSceneEnum;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -13,15 +15,15 @@ import static java.util.function.Function.identity;
  **/
 public final class IdempotentLevelHandlerFactory {
 
-  private final Map<String, IdempotentLevelHandler> idempotentLevelHandlers;
+  private final Map<IdempotentSceneEnum, IdempotentLevelHandler> idempotentLevelHandlers;
 
   public IdempotentLevelHandlerFactory(
       Set<IdempotentLevelHandler> idempotentLevelHandlers) {
     this.idempotentLevelHandlers = idempotentLevelHandlers.stream()
-        .collect(Collectors.toMap(IdempotentLevelHandler::level, identity()));
+        .collect(Collectors.toMap(IdempotentLevelHandler::scene, identity()));
   }
 
-  public IdempotentLevelHandler getInstance(String level) {
-    return idempotentLevelHandlers.get(level);
+  public IdempotentLevelHandler getInstance(IdempotentSceneEnum scene) {
+    return idempotentLevelHandlers.get(scene);
   }
 }

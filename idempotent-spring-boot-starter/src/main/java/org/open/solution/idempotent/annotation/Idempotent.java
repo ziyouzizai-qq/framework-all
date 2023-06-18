@@ -1,20 +1,19 @@
 package org.open.solution.idempotent.annotation;
 
-import org.open.solution.idempotent.core.IdempotentDclHandler;
 import org.open.solution.idempotent.enums.IdempotentSceneEnum;
 import org.open.solution.idempotent.enums.IdempotentTypeEnum;
 
 import java.lang.annotation.*;
 
-@Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})
+@Target(ElementType.ANNOTATION_TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Idempotent {
 
     /**
-     * 幂等Key，只有在 {@link Idempotent#type()} 为 {@link IdempotentTypeEnum#SPEL} 时生效
+     * 幂等Key，spEl 表达式
      */
-    String key() default "";
+    String partKey() default "";
 
     /**
      * 触发幂等失败逻辑时，返回的错误提示信息
@@ -31,11 +30,10 @@ public @interface Idempotent {
     /**
      * 验证幂等场景, 默认为DCL机制校验
      */
-    String level() default IdempotentDclHandler.DCL;
+    IdempotentSceneEnum scene() default IdempotentSceneEnum.DCL;
 
     /**
      * DCL校验机制是否开启前置检查
-     * @return
      */
     boolean enableProCheck() default false;
 
@@ -45,15 +43,4 @@ public @interface Idempotent {
      */
     String validateApi() default "@lockBlockHandler.validateData()";
 
-    /**
-     * 设置防重令牌 Key 前缀，MQ 幂等去重可选设置
-     * {@link IdempotentSceneEnum#MQ} and {@link IdempotentTypeEnum#SPEL} 时生效
-     */
-    String uniqueKeyPrefix() default "";
-
-    /**
-     * 设置防重令牌 Key 过期时间，单位秒，默认 1 小时，MQ 幂等去重可选设置
-     * {@link IdempotentSceneEnum#MQ} and {@link IdempotentTypeEnum#SPEL} 时生效
-     */
-    long keyTimeout() default 3600L;
 }

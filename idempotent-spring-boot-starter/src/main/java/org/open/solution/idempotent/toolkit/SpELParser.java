@@ -22,20 +22,6 @@ public class SpELParser {
   private final BeanFactory beanFactory;
 
   /**
-   * 校验并返回实际使用的 spEL 表达式
-   *
-   * @param spEl spEL 表达式
-   * @return 实际使用的 spEL 表达式
-   */
-  public Object parseKey(String spEl, Method method, Object[] contextObj) {
-    String spElFlag = "#";
-    if (!spEl.contains(spElFlag)) {
-      return spEl;
-    }
-    return parse(spEl, method, contextObj);
-  }
-
-  /**
    * 转换参数为字符串
    *
    * @param spEl       spEl 表达式
