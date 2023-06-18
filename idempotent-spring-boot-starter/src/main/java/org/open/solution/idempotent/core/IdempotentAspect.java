@@ -38,6 +38,12 @@ public class IdempotentAspect {
     try {
       idempotentExecuteHandler.execute(joinPoint, idempotent, idempotentLevelHandler);
       return joinPoint.proceed();
+    } catch (IdempotentConfigException e) {
+      Logger logger = LoggerFactory.getLogger(joinPoint.getTarget().getClass());
+      logger.error("{}() method, idempotent config exception occurred, error message：{}",
+              joinPoint.getSignature().getName(),
+              e.getMessage());
+      throw e;
     } catch (IdempotentException e) {
       Logger logger = LoggerFactory.getLogger(joinPoint.getTarget().getClass());
       logger.error("{}() method, idempotent exception occurred, error message：{}",
