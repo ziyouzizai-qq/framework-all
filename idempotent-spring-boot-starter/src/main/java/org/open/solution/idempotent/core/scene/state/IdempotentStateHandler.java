@@ -48,6 +48,10 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
       String state = stringRedisTemplate.opsForValue().get(lockKey);
       if (IdempotentStateEnum.CONSUMED.getCode().equals(state)) {
         throw new IdempotentException(param.getIdempotent().message());
+        // 该状态有两种可能
+        // 1. 有另一个线程在消费.
+        // 2. 有另一个线程执行业务逻辑前状态变更为CONSUMING后，还未执行业务逻辑，服务挂了，当前状态则一直到缓存过期，在这段期间
+        // 后续合法的重试请求而得不到消费，因此要注意这种情况。
       } else if (IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
         log.info("another thread is consuming.");
         throw new IdempotentException(param.getIdempotent().message());
