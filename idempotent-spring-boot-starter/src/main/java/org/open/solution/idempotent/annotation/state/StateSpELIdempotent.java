@@ -34,6 +34,12 @@ public @interface StateSpELIdempotent {
     long consumedExpirationDate() default 60 * 10;
 
     /**
+     * 业务异常后是否重置当前token
+     */
+    @AliasFor(annotation = StateIdempotent.class, attribute = "resetException")
+    boolean resetException() default false;
+
+    /**
      * 触发幂等失败逻辑时，返回的错误提示信息
      */
     @AliasFor(annotation = StateIdempotent.class, attribute = "message")

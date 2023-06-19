@@ -29,6 +29,12 @@ public @interface StateIdempotent {
     String message() default "您操作太快，请稍后再试";
 
     /**
+     * 业务异常后是否重置当前token
+     */
+    @AliasFor(annotation = Idempotent.class, attribute = "enableProCheck")
+    boolean resetException() default false;
+
+    /**
      * state模式下消费中的时效
      */
     @AliasFor(annotation = Idempotent.class, attribute = "consumingExpirationDate")
