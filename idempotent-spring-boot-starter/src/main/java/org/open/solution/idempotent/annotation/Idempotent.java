@@ -43,4 +43,9 @@ public @interface Idempotent {
      */
     String validateApi() default "@idempotentDclHandler.validateData()";
 
+    /**
+     * state模式下时效
+     */
+    long expirationDate() default 600;
+
 }

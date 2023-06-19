@@ -61,7 +61,9 @@ public class IdempotentAspect {
 
   @Pointcut("@annotation(org.open.solution.idempotent.annotation.token.TokenIdempotent) ||" +
           "@annotation(org.open.solution.idempotent.annotation.dcl.DCLParamIdempotent) ||" +
-          "@annotation(org.open.solution.idempotent.annotation.dcl.DCLSpELIdempotent)")
+          "@annotation(org.open.solution.idempotent.annotation.dcl.DCLSpELIdempotent) ||" +
+          "@annotation(org.open.solution.idempotent.annotation.state.StateParamIdempotent) ||" +
+          "@annotation(org.open.solution.idempotent.annotation.state.StateSpELIdempotent)")
   public void idempotentMethods() {}
 
   public static Idempotent getIdempotent(ProceedingJoinPoint joinPoint) throws NoSuchMethodException {

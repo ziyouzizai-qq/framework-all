@@ -57,7 +57,7 @@ public final class IdempotentTokenExecuteHandler extends AbstractIdempotentTempl
     public String createToken() {
         String uuid = UUID.randomUUID().toString();
         String token = lockKey(uuid);
-        stringRedisTemplate.opsForValue().set(token, defaultToken(), idempotentTokenProperties.getExpiredTime(), TimeUnit.SECONDS);
+        stringRedisTemplate.opsForValue().set(token, "", idempotentTokenProperties.getExpiredTime(), TimeUnit.SECONDS);
         return uuid;
     }
 

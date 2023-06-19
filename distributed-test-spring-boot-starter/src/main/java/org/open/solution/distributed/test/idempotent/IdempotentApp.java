@@ -3,6 +3,8 @@ package org.open.solution.distributed.test.idempotent;
 import lombok.RequiredArgsConstructor;
 import org.open.solution.idempotent.annotation.dcl.DCLParamIdempotent;
 import org.open.solution.idempotent.annotation.dcl.DCLSpELIdempotent;
+import org.open.solution.idempotent.annotation.state.StateParamIdempotent;
+import org.open.solution.idempotent.annotation.state.StateSpELIdempotent;
 import org.open.solution.idempotent.annotation.token.TokenIdempotent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,10 +25,10 @@ public class IdempotentApp {
   private IdempotentService idempotentService;
 
   @PostMapping("/idempotent/dcl")
-  @DCLParamIdempotent(
+  @DCLSpELIdempotent(
           validateApi = "@idempotentService.validateData(#uiIdempotent)",
-//          partKey = "#uiIdempotent.getId()",
-          message = "操作次数过多")
+          partKey = "#uiIdempotent.getId()",
+          message = "dcl: 操作次数过多")
   public String idempotentDCL(@RequestBody UiIdempotent uiIdempotent) {
 
     idempotentService.add(uiIdempotent);
@@ -36,8 +38,19 @@ public class IdempotentApp {
   @PostMapping("/idempotent/token")
   @TokenIdempotent(
           partKey = "#uiIdempotent.getId()",
-          message = "操作次数太TM多了")
+          message = "token: 操作次数过多",
+          resetException = true)
   public String idempotentToken(@RequestBody UiIdempotent uiIdempotent) {
+    idempotentService.add(uiIdempotent);
+    int i = 1/ 0;
+    return "1111";
+  }
+
+  @PostMapping("/idempotent/state")
+  @StateSpELIdempotent(
+      partKey = "#uiIdempotent.getId()",
+      message = "state: 操作次数过多", expirationDate = 5)
+  public String idempotentState(@RequestBody UiIdempotent uiIdempotent) {
     idempotentService.add(uiIdempotent);
     return "1111";
   }

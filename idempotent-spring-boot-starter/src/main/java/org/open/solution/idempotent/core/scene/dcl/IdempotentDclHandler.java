@@ -29,17 +29,17 @@ public class IdempotentDclHandler extends AbstractIdempotentSceneHandler {
     @Override
     public void validateIdempotent(IdempotentValidateParam param) {
         if (param.getIdempotent().enableProCheck() && !validateData(param)) {
-            IdempotentContext.putLock(null);
+            IdempotentContext.put(null);
             throw new IdempotentException(param.getIdempotent().message());
         }
 
         DistributedLock lock = distributedLockFactory.getLock(param.getLockKey());
         if (!lock.tryLock()) {
-            IdempotentContext.putLock(null);
+            IdempotentContext.put(null);
             throw new IdempotentException(param.getIdempotent().message());
         } else {
             // 将分布式锁放入上下文
-            IdempotentContext.putLock(lock);
+            IdempotentContext.put(lock);
             if (!validateData(param)) {
                 throw new IdempotentException(param.getIdempotent().message());
             }
@@ -50,7 +50,7 @@ public class IdempotentDclHandler extends AbstractIdempotentSceneHandler {
     public void postProcessing() {
         DistributedLock lock = null;
         try {
-            lock = IdempotentContext.getLock();
+            lock = (DistributedLock) IdempotentContext.removeLast();
         } finally {
             if (lock != null) {
                 lock.unlock();

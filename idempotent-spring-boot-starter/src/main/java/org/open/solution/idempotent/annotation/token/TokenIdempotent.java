@@ -20,6 +20,12 @@ public @interface TokenIdempotent {
     String partKey() default "@idempotentTokenExecuteHandler.defaultToken()";
 
     /**
+     * 业务异常后是否重置当前token
+     */
+    @AliasFor(annotation = Idempotent.class, attribute = "enableProCheck")
+    boolean resetException() default false;
+
+    /**
      * 触发幂等失败逻辑时，返回的错误提示信息
      */
     @AliasFor(annotation = Idempotent.class, attribute = "message")

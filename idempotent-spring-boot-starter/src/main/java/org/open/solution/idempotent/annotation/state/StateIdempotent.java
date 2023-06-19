@@ -27,4 +27,10 @@ public @interface StateIdempotent {
      */
     @AliasFor(annotation = Idempotent.class, attribute = "message")
     String message() default "您操作太快，请稍后再试";
+
+    /**
+     * state模式下时效
+     */
+    @AliasFor(annotation = Idempotent.class, attribute = "expirationDate")
+    long expirationDate() default 600;
 }

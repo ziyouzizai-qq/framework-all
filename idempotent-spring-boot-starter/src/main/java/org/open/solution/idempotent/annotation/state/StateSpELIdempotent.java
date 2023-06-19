@@ -22,6 +22,12 @@ public @interface StateSpELIdempotent {
     String partKey();
 
     /**
+     * 幂等时效
+     */
+    @AliasFor(annotation = StateIdempotent.class, attribute = "expirationDate")
+    long expirationDate() default 600;
+
+    /**
      * 触发幂等失败逻辑时，返回的错误提示信息
      */
     @AliasFor(annotation = StateIdempotent.class, attribute = "message")

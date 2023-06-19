@@ -3,6 +3,7 @@ package org.open.solution.idempotent.config;
 import org.open.solution.distributed.lock.core.DistributedLockFactory;
 import org.open.solution.idempotent.core.*;
 import org.open.solution.idempotent.core.scene.dcl.IdempotentDclHandler;
+import org.open.solution.idempotent.core.scene.state.IdempotentStateHandler;
 import org.open.solution.idempotent.core.type.param.IdempotentParamExecuteHandler;
 import org.open.solution.idempotent.core.type.spel.IdempotentSpELExecuteHandler;
 import org.open.solution.idempotent.core.type.token.IdempotentTokenController;
@@ -25,7 +26,7 @@ import java.util.Set;
  * @date 2023/6/15
  **/
 @Configuration
-@EnableConfigurationProperties({IdempotentTokenProperties.class, IdempotentStateProperties.class})
+@EnableConfigurationProperties({IdempotentTokenProperties.class})
 public class IdempotentAutoConfiguration {
 
   /**
@@ -95,8 +96,17 @@ public class IdempotentAutoConfiguration {
    * token模式幂等
    */
   @Bean
-  public IdempotentTokenHandler idempotentTokenHandler(StringRedisTemplate stringRedisTemplate) {
-    return new IdempotentTokenHandler(stringRedisTemplate);
+  public IdempotentTokenHandler idempotentTokenHandler(StringRedisTemplate stringRedisTemplate,
+                                                       IdempotentTokenProperties idempotentTokenProperties) {
+    return new IdempotentTokenHandler(stringRedisTemplate, idempotentTokenProperties);
+  }
+
+  /**
+   * state模式幂等
+   */
+  @Bean
+  public IdempotentStateHandler idempotentStateHandler(StringRedisTemplate stringRedisTemplate) {
+    return new IdempotentStateHandler(stringRedisTemplate);
   }
 
   /**

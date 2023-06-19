@@ -34,7 +34,7 @@ public class IdempotenBlockTestApp {
         for (int i = 0; i < 100000; i++) {
             Runnable worker = () -> {
                 try {
-                    idempotentApp.idempotentDCL(uiIdempotent);
+                    idempotentApp.idempotentState(uiIdempotent);
                     success.incrementAndGet();
                 } catch (Exception ex) {
                     fail.incrementAndGet();
@@ -43,7 +43,7 @@ public class IdempotenBlockTestApp {
             executor.execute(worker);
         }
 
-        Thread.sleep(30 * 1000);
+        Thread.sleep(120 * 1000);
 
         return "success: " + success.get() + " ,fail: " + fail.get();
     }
