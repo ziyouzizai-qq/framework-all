@@ -11,6 +11,7 @@ import org.open.solution.idempotent.enums.IdempotentStateEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.util.StringUtils;
 
 import java.util.concurrent.TimeUnit;
 
@@ -68,10 +69,14 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
     IdempotentValidateParam param = (IdempotentValidateParam) IdempotentContext.removeLast();
     if (param != null) {
       try {
-        stringRedisTemplate.opsForValue().set(param.getLockKey(),
-            IdempotentStateEnum.CONSUMED.getCode(),
-            param.getIdempotent().consumedExpirationDate(),
-            TimeUnit.SECONDS);
+        String state = stringRedisTemplate.opsForValue().get(param.getLockKey());
+        // 查看是否出异常后被删除
+        if (StringUtils.hasLength(state)) {
+          stringRedisTemplate.opsForValue().set(param.getLockKey(),
+              IdempotentStateEnum.CONSUMED.getCode(),
+              param.getIdempotent().consumedExpirationDate(),
+              TimeUnit.SECONDS);
+        }
       } catch (Throwable ex) {
         Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
         logger.error("[{}] Failed to set state anti-heavy token.", param.getLockKey());

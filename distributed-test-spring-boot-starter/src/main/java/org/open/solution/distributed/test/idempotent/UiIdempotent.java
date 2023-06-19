@@ -14,4 +14,6 @@ public class UiIdempotent {
   private String id;
 
   private String other;
+
+  private int z;
 }
