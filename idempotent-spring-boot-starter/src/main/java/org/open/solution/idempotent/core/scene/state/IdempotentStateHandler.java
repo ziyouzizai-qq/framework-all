@@ -40,7 +40,7 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
     // 2.由于缓存过期限制，定时删除或者内存不够触发算法提前删，切记，尽量避免后者情况。否则比预计的提前过期会出现幂等性问题
     // 3.误操作redis导致，比如说时效性未到就删除数据
     Boolean setIfAbsent = stringRedisTemplate.opsForValue()
-        .setIfAbsent(lockKey, IdempotentStateEnum.CONSUMING.getCode(), param.getIdempotent().expirationDate(), TimeUnit.SECONDS);
+        .setIfAbsent(lockKey, IdempotentStateEnum.CONSUMING.getCode(), param.getIdempotent().consumingExpirationDate(), TimeUnit.SECONDS);
 
 
     if (setIfAbsent != null && !setIfAbsent) {
@@ -48,11 +48,11 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
       String state = stringRedisTemplate.opsForValue().get(lockKey);
       if (IdempotentStateEnum.CONSUMED.getCode().equals(state)) {
         throw new IdempotentException(param.getIdempotent().message());
+      } else if (IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
         // 该状态有两种可能
         // 1. 有另一个线程在消费.
         // 2. 有另一个线程执行业务逻辑前状态变更为CONSUMING后，还未执行业务逻辑，服务挂了，当前状态则一直到缓存过期，在这段期间
         // 后续合法的重试请求而得不到消费，因此要注意这种情况。
-      } else if (IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
         log.info("another thread is consuming.");
         throw new IdempotentException(param.getIdempotent().message());
       } else {
@@ -70,7 +70,7 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
       try {
         stringRedisTemplate.opsForValue().set(param.getLockKey(),
             IdempotentStateEnum.CONSUMED.getCode(),
-            param.getIdempotent().expirationDate(),
+            param.getIdempotent().consumedExpirationDate(),
             TimeUnit.SECONDS);
       } catch (Throwable ex) {
         Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());

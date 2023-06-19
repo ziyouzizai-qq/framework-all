@@ -1,5 +1,6 @@
 package org.open.solution.idempotent.annotation.state;
 
+import org.open.solution.idempotent.annotation.Idempotent;
 import org.open.solution.idempotent.enums.IdempotentTypeEnum;
 import org.springframework.core.annotation.AliasFor;
 import java.lang.annotation.Documented;
@@ -15,10 +16,16 @@ import java.lang.annotation.Target;
 public @interface StateParamIdempotent {
 
     /**
-     * 幂等时效
+     * state模式下消费中的时效
      */
-    @AliasFor(annotation = StateIdempotent.class, attribute = "expirationDate")
-    long expirationDate() default 600;
+    @AliasFor(annotation = StateIdempotent.class, attribute = "consumingExpirationDate")
+    long consumingExpirationDate() default 30;
+
+    /**
+     * state模式下消费完的时效
+     */
+    @AliasFor(annotation = StateIdempotent.class, attribute = "consumedExpirationDate")
+    long consumedExpirationDate() default 60 * 10;
 
     /**
      * 触发幂等失败逻辑时，返回的错误提示信息

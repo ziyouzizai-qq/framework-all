@@ -22,10 +22,16 @@ public @interface StateSpELIdempotent {
     String partKey();
 
     /**
-     * 幂等时效
+     * state模式下消费中的时效
      */
-    @AliasFor(annotation = StateIdempotent.class, attribute = "expirationDate")
-    long expirationDate() default 600;
+    @AliasFor(annotation = StateIdempotent.class, attribute = "consumingExpirationDate")
+    long consumingExpirationDate() default 30;
+
+    /**
+     * state模式下消费完的时效
+     */
+    @AliasFor(annotation = StateIdempotent.class, attribute = "consumedExpirationDate")
+    long consumedExpirationDate() default 60 * 10;
 
     /**
      * 触发幂等失败逻辑时，返回的错误提示信息

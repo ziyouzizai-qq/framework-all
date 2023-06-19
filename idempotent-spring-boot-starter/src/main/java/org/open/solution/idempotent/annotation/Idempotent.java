@@ -44,8 +44,13 @@ public @interface Idempotent {
     String validateApi() default "@idempotentDclHandler.validateData()";
 
     /**
-     * state模式下时效
+     * state模式下消费中的时效
      */
-    long expirationDate() default 600;
+    long consumingExpirationDate() default 30;
+
+    /**
+     * state模式下消费完的时效
+     */
+    long consumedExpirationDate() default 60 * 10;
 
 }

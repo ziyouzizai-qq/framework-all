@@ -49,7 +49,9 @@ public class IdempotentApp {
   @PostMapping("/idempotent/state")
   @StateSpELIdempotent(
       partKey = "#uiIdempotent.getId()",
-      message = "state: 操作次数过多", expirationDate = 5)
+      message = "state: 操作次数过多",
+      consumingExpirationDate = 5,
+      consumedExpirationDate = 300)
   public String idempotentState(@RequestBody UiIdempotent uiIdempotent) {
     idempotentService.add(uiIdempotent);
     return "1111";
