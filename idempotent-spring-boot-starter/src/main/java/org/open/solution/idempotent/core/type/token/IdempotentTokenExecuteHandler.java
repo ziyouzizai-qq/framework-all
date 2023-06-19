@@ -3,6 +3,7 @@ package org.open.solution.idempotent.core.type.token;
 import cn.hutool.core.util.StrUtil;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.open.solution.idempotent.config.IdempotentTokenProperties;
 import org.open.solution.idempotent.core.AbstractIdempotentTemplate;
 import org.open.solution.idempotent.core.IdempotentValidateParam;
 import org.open.solution.idempotent.enums.IdempotentTypeEnum;
@@ -22,11 +23,11 @@ public final class IdempotentTokenExecuteHandler extends AbstractIdempotentTempl
 
     private static final String TOKEN_PREFIX_KEY = "idempotent:token:";
 
-    private static final long TOKEN_EXPIRED_TIME = 600 * 1000;
-
     private final SpELParser spELParser;
 
     private final StringRedisTemplate stringRedisTemplate;
+
+    private final IdempotentTokenProperties idempotentTokenProperties;
 
     @Override
     protected void buildValidateParam(IdempotentValidateParam idempotentValidateParam) {
@@ -56,7 +57,7 @@ public final class IdempotentTokenExecuteHandler extends AbstractIdempotentTempl
     public String createToken() {
         String uuid = UUID.randomUUID().toString();
         String token = lockKey(uuid);
-        stringRedisTemplate.opsForValue().set(token, defaultToken(), TOKEN_EXPIRED_TIME, TimeUnit.MILLISECONDS);
+        stringRedisTemplate.opsForValue().set(token, defaultToken(), idempotentTokenProperties.getExpiredTime(), TimeUnit.SECONDS);
         return uuid;
     }
 

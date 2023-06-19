@@ -11,6 +11,7 @@ import org.open.solution.idempotent.core.scene.token.IdempotentTokenHandler;
 import org.open.solution.idempotent.core.type.token.IdempotentTokenService;
 import org.open.solution.idempotent.toolkit.SpELParser;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -24,6 +25,7 @@ import java.util.Set;
  * @date 2023/6/15
  **/
 @Configuration
+@EnableConfigurationProperties({IdempotentTokenProperties.class})
 public class IdempotentAutoConfiguration {
 
   /**
@@ -65,8 +67,9 @@ public class IdempotentAutoConfiguration {
    */
   @Bean
   public IdempotentTokenExecuteHandler idempotentTokenExecuteHandler(SpELParser spELParser,
-                                                                     StringRedisTemplate stringRedisTemplate) {
-    return new IdempotentTokenExecuteHandler(spELParser, stringRedisTemplate);
+                                                                     StringRedisTemplate stringRedisTemplate,
+                                                                     IdempotentTokenProperties idempotentTokenProperties) {
+    return new IdempotentTokenExecuteHandler(spELParser, stringRedisTemplate, idempotentTokenProperties);
   }
 
   /**
