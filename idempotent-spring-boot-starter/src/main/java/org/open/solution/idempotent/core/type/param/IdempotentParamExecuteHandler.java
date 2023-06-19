@@ -1,7 +1,5 @@
-package org.open.solution.idempotent.core.param;
+package org.open.solution.idempotent.core.type.param;
 
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.open.solution.idempotent.annotation.Idempotent;
 import org.open.solution.idempotent.core.AbstractIdempotentTemplate;
 import org.open.solution.idempotent.core.IdempotentValidateParam;
 import org.open.solution.idempotent.enums.IdempotentTypeEnum;

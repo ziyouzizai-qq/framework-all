@@ -1,4 +1,4 @@
-package org.open.solution.idempotent.core.spel;
+package org.open.solution.idempotent.core.type.spel;
 
 import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.json.JSONUtil;

@@ -1,4 +1,4 @@
-package org.open.solution.idempotent.core.param;
+package org.open.solution.idempotent.core.type.param;
 
 import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.json.JSONUtil;

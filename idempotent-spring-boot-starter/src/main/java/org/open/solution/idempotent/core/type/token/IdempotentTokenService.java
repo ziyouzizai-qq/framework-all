@@ -1,4 +1,4 @@
-package org.open.solution.idempotent.core.token;
+package org.open.solution.idempotent.core.type.token;
 
 /**
  *

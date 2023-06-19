@@ -1,4 +1,4 @@
-package org.open.solution.idempotent.core.token;
+package org.open.solution.idempotent.core.scene.token;
 
 import lombok.RequiredArgsConstructor;
 import org.open.solution.idempotent.core.AbstractIdempotentLevelHandler;

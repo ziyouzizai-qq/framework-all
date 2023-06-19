@@ -1,4 +1,4 @@
-package org.open.solution.idempotent.core.token;
+package org.open.solution.idempotent.core.type.token;
 
 import cn.hutool.core.util.StrUtil;
 import lombok.RequiredArgsConstructor;
@@ -56,7 +56,7 @@ public final class IdempotentTokenExecuteHandler extends AbstractIdempotentTempl
     public String createToken() {
         String uuid = UUID.randomUUID().toString();
         String token = lockKey(uuid);
-        stringRedisTemplate.opsForValue().set(token, "", TOKEN_EXPIRED_TIME, TimeUnit.MILLISECONDS);
+        stringRedisTemplate.opsForValue().set(token, defaultToken(), TOKEN_EXPIRED_TIME, TimeUnit.MILLISECONDS);
         return uuid;
     }
 
