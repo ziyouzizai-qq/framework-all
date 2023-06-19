@@ -47,6 +47,11 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
     if (setIfAbsent != null && !setIfAbsent) {
       IdempotentContext.put(null);
       String state = stringRedisTemplate.opsForValue().get(lockKey);
+
+      // state 为null的情况，以下两种情况对consumingExpirationDate的设置合理性要高，才能避免为null
+      // 1.上面设置超时运行到此处正好过期，这种情况不可能，consumingExpirationDate为业务逻辑时间要长，而且这几行代码没有耗时，除非redis极慢
+      // 2.被其他线程调用exceptionProcessing，也不会，正常情况如果consumingExpirationDate值合理，异常后都是当前线程来调用，然而exceptionProcessing在当前方法后面执行
+      // 因此这种情况也很少出现
       if (IdempotentStateEnum.CONSUMED.getCode().equals(state)) {
         throw new IdempotentException(param.getIdempotent().message());
       } else if (IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
@@ -56,8 +61,6 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
         // 后续合法的重试请求而得不到消费，因此要注意这种情况。
         log.info("another thread is consuming.");
         throw new IdempotentException(param.getIdempotent().message());
-      } else {
-        // 业务异常调用exceptionProcessing导致被删
       }
     } else {
       IdempotentContext.put(param);
@@ -70,7 +73,8 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
     if (param != null) {
       try {
         String state = stringRedisTemplate.opsForValue().get(param.getLockKey());
-        // 查看是否出异常后被删除
+        // 根据validateIdempotent中对于null的情况，基于合理的consumingExpirationDate值，可以得出当state为null时
+        // 说明当前线程执行业务逻辑时触发异常被删除，因此为了使得后续合理的重试请求可以得到继续，则保持未消费的状态。
         if (StringUtils.hasLength(state)) {
           stringRedisTemplate.opsForValue().set(param.getLockKey(),
               IdempotentStateEnum.CONSUMED.getCode(),
