@@ -24,7 +24,7 @@ public interface IdempotentExecuteHandler {
      * @param idempotent 幂等注解
      * @param idempotentLevelHandler 幂等处理级别
      */
-    void execute(ProceedingJoinPoint joinPoint, Idempotent idempotent, IdempotentLevelHandler idempotentLevelHandler);
+    void execute(ProceedingJoinPoint joinPoint, Idempotent idempotent, IdempotentSceneHandler idempotentLevelHandler);
 
     /**
      * @return 获取当前method标记

@@ -13,5 +13,10 @@ public enum IdempotentSceneEnum {
     /**
      * 基于 TOKEN 场景验证
      */
-    TOKEN
+    TOKEN,
+
+    /**
+     * 基于状态的验证
+     */
+    STATE
 }

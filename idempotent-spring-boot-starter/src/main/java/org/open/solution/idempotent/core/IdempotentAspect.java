@@ -25,7 +25,7 @@ public class IdempotentAspect {
 
   private final IdempotentExecuteHandlerFactory idempotentExecuteHandlerFactory;
 
-  private final IdempotentLevelHandlerFactory idempotentLevelHandlerFactory;
+  private final IdempotentSceneHandlerFactory idempotentLevelHandlerFactory;
 
   /**
    * 增强方法标记 {@link Idempotent} 注解逻辑
@@ -34,9 +34,9 @@ public class IdempotentAspect {
   public Object idempotentHandler(ProceedingJoinPoint joinPoint) throws Throwable {
     Idempotent idempotent = getIdempotent(joinPoint);
     IdempotentExecuteHandler idempotentExecuteHandler = idempotentExecuteHandlerFactory.getInstance(idempotent.type());
-    IdempotentLevelHandler idempotentLevelHandler = idempotentLevelHandlerFactory.getInstance(idempotent.scene());
+    IdempotentSceneHandler idempotentSceneHandler = idempotentLevelHandlerFactory.getInstance(idempotent.scene());
     try {
-      idempotentExecuteHandler.execute(joinPoint, idempotent, idempotentLevelHandler);
+      idempotentExecuteHandler.execute(joinPoint, idempotent, idempotentSceneHandler);
       return joinPoint.proceed();
     } catch (IdempotentConfigException e) {
       Logger logger = LoggerFactory.getLogger(joinPoint.getTarget().getClass());
@@ -50,8 +50,12 @@ public class IdempotentAspect {
               joinPoint.getSignature().getName(),
               e.getMessage());
       throw e;
+    } catch (Exception e) {
+      // 业务异常处理
+      idempotentSceneHandler.exceptionProcessing();
+      throw e;
     } finally {
-      idempotentLevelHandler.postProcessing();
+      idempotentSceneHandler.postProcessing();
     }
   }
 

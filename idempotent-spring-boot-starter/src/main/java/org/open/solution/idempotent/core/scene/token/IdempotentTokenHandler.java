@@ -1,7 +1,7 @@
 package org.open.solution.idempotent.core.scene.token;
 
 import lombok.RequiredArgsConstructor;
-import org.open.solution.idempotent.core.AbstractIdempotentLevelHandler;
+import org.open.solution.idempotent.core.AbstractIdempotentSceneHandler;
 import org.open.solution.idempotent.core.IdempotentException;
 import org.open.solution.idempotent.core.IdempotentValidateParam;
 import org.open.solution.idempotent.enums.IdempotentSceneEnum;
@@ -13,7 +13,7 @@ import java.util.Objects;
  * Token幂等处理器
  */
 @RequiredArgsConstructor
-public class IdempotentTokenHandler extends AbstractIdempotentLevelHandler {
+public class IdempotentTokenHandler extends AbstractIdempotentSceneHandler {
 
     private final StringRedisTemplate stringRedisTemplate;
 

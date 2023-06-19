@@ -25,7 +25,7 @@ import java.util.Set;
  * @date 2023/6/15
  **/
 @Configuration
-@EnableConfigurationProperties({IdempotentTokenProperties.class})
+@EnableConfigurationProperties({IdempotentTokenProperties.class, IdempotentStateProperties.class})
 public class IdempotentAutoConfiguration {
 
   /**
@@ -33,8 +33,8 @@ public class IdempotentAutoConfiguration {
    */
   @Bean
   public IdempotentAspect idempotentAspect(IdempotentExecuteHandlerFactory idempotentExecuteHandlerFactory,
-                                           IdempotentLevelHandlerFactory idempotentLevelHandlerFactory) {
-    return new IdempotentAspect(idempotentExecuteHandlerFactory, idempotentLevelHandlerFactory);
+                                           IdempotentSceneHandlerFactory idempotentSceneHandlerFactory) {
+    return new IdempotentAspect(idempotentExecuteHandlerFactory, idempotentSceneHandlerFactory);
   }
 
   /**
@@ -76,9 +76,9 @@ public class IdempotentAutoConfiguration {
    * 幂等模式级别工厂
    */
   @Bean
-  public IdempotentLevelHandlerFactory idempotentLevelHandlerFactory(
-      Set<IdempotentLevelHandler> idempotentLevelHandlers) {
-    return new IdempotentLevelHandlerFactory(idempotentLevelHandlers);
+  public IdempotentSceneHandlerFactory idempotentSceneHandlerFactory(
+      Set<IdempotentSceneHandler> idempotentSceneHandlers) {
+    return new IdempotentSceneHandlerFactory(idempotentSceneHandlers);
   }
 
   /**

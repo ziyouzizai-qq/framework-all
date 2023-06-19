@@ -2,7 +2,7 @@ package org.open.solution.idempotent.core;
 
 import org.open.solution.idempotent.enums.IdempotentSceneEnum;
 
-public interface IdempotentLevelHandler {
+public interface IdempotentSceneHandler {
 
     /**
      * 幂等性级别
@@ -22,4 +22,9 @@ public interface IdempotentLevelHandler {
      * 后置处理
      */
     void postProcessing();
+
+    /**
+     * 业务异常流程处理
+     */
+    void exceptionProcessing();
 }
