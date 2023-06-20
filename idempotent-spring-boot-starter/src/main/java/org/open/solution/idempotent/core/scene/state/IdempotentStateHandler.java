@@ -86,6 +86,11 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
             Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
             logger.error("[{}] idempotency exception occurred, and the current state has been modified by another task.", param.getLockKey());
           }
+        } else {
+          if (!param.getIdempotent().enableProCheck()) {
+            Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
+            logger.error("[{}] idempotency exception occurred, and the current state has been modified by another task.", param.getLockKey());
+          }
         }
       } catch (Throwable ex) {
         Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
