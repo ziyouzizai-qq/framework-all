@@ -1,4 +1,4 @@
-package org.open.solution.idempotent.core.scene.dcl;
+package org.open.solution.idempotent.core.scene.dlc;
 
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -12,10 +12,10 @@ import org.open.solution.idempotent.enums.IdempotentSceneEnum;
 import org.open.solution.idempotent.toolkit.SpELParser;
 
 /**
- * DCL幂等处理器
+ * DLC幂等处理器
  */
 @RequiredArgsConstructor
-public class IdempotentDclHandler extends AbstractIdempotentSceneHandler {
+public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
 
     private final DistributedLockFactory distributedLockFactory;
 
@@ -23,7 +23,7 @@ public class IdempotentDclHandler extends AbstractIdempotentSceneHandler {
 
     @Override
     public IdempotentSceneEnum scene() {
-        return IdempotentSceneEnum.DCL;
+        return IdempotentSceneEnum.DLC;
     }
 
     @Override

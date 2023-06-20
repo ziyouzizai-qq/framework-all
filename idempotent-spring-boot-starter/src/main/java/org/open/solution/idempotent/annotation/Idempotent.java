@@ -28,20 +28,19 @@ public @interface Idempotent {
     IdempotentTypeEnum type() default IdempotentTypeEnum.PARAM;
 
     /**
-     * 验证幂等场景, 默认为DCL机制校验
+     * 验证幂等场景, 默认为DLC机制校验
      */
-    IdempotentSceneEnum scene() default IdempotentSceneEnum.DCL;
+    IdempotentSceneEnum scene() default IdempotentSceneEnum.DLC;
 
     /**
-     * DCL校验机制是否开启前置检查
+     * DLC校验机制是否开启前置检查
      */
     boolean enableProCheck() default false;
 
     /**
-     * BLOCK 情况需要业务层校验
-     * @return
+     * DLC业务层校验
      */
-    String validateApi() default "@idempotentDclHandler.validateData()";
+    String validateApi() default "@idempotentDLCHandler.validateData()";
 
     /**
      * state模式下消费中的时效

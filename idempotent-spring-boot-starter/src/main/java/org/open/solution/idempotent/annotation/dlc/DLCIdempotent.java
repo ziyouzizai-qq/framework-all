@@ -1,4 +1,4 @@
-package org.open.solution.idempotent.annotation.dcl;
+package org.open.solution.idempotent.annotation.dlc;
 
 import org.open.solution.idempotent.annotation.Idempotent;
 import org.open.solution.idempotent.enums.IdempotentSceneEnum;
@@ -10,8 +10,8 @@ import java.lang.annotation.*;
 @Target(ElementType.ANNOTATION_TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Idempotent(scene = IdempotentSceneEnum.DCL)
-public @interface DCLIdempotent {
+@Idempotent(scene = IdempotentSceneEnum.DLC)
+public @interface DLCIdempotent {
 
     /**
      * {@link Idempotent#type} 的别名
@@ -20,7 +20,7 @@ public @interface DCLIdempotent {
     IdempotentTypeEnum type() default IdempotentTypeEnum.PARAM;
 
     /**
-     * DCL校验机制是否开启前置检查
+     * DLC校验机制是否开启前置检查
      */
     @AliasFor(annotation = Idempotent.class, attribute = "enableProCheck")
     boolean enableProCheck() default false;
@@ -29,7 +29,7 @@ public @interface DCLIdempotent {
      * BLOCK 情况需要业务层校验
      */
     @AliasFor(annotation = Idempotent.class, attribute = "validateApi")
-    String validateApi() default "@idempotentDclHandler.validateData()";
+    String validateApi() default "@idempotentDLCHandler.validateData()";
 
     /**
      * 触发幂等失败逻辑时，返回的错误提示信息

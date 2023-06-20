@@ -1,9 +1,7 @@
 package org.open.solution.distributed.test.idempotent;
 
 import lombok.RequiredArgsConstructor;
-import org.open.solution.idempotent.annotation.dcl.DCLParamIdempotent;
-import org.open.solution.idempotent.annotation.dcl.DCLSpELIdempotent;
-import org.open.solution.idempotent.annotation.state.StateParamIdempotent;
+import org.open.solution.idempotent.annotation.dlc.DLCSpELIdempotent;
 import org.open.solution.idempotent.annotation.state.StateSpELIdempotent;
 import org.open.solution.idempotent.annotation.token.TokenIdempotent;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +22,12 @@ public class IdempotentApp {
   @Autowired
   private IdempotentService idempotentService;
 
-  @PostMapping("/idempotent/dcl")
-  @DCLSpELIdempotent(
+  @PostMapping("/idempotent/dlc")
+  @DLCSpELIdempotent(
           validateApi = "@idempotentService.validateData(#uiIdempotent)",
           partKey = "#uiIdempotent.getId()",
           message = "dcl: 操作次数过多")
-  public String idempotentDCL(@RequestBody UiIdempotent uiIdempotent) {
+  public String idempotentDLC(@RequestBody UiIdempotent uiIdempotent) {
 
     idempotentService.add(uiIdempotent);
     return "1111";
@@ -50,10 +48,13 @@ public class IdempotentApp {
   @StateSpELIdempotent(
       partKey = "#uiIdempotent.getId()",
       message = "state: 操作次数过多",
-      consumingExpirationDate = 5,
-      consumedExpirationDate = 300)
-  public String idempotentState(@RequestBody UiIdempotent uiIdempotent) {
+      consumingExpirationDate = 6,
+      consumedExpirationDate = 20,
+      resetException = true)
+  public String idempotentState(@RequestBody UiIdempotent uiIdempotent) throws InterruptedException {
     idempotentService.add(uiIdempotent);
+//    Thread.sleep(5 * 1000);
+    int i = 1/ uiIdempotent.getZ();
     return "1111";
   }
 }

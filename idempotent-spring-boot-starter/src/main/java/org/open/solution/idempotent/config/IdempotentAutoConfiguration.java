@@ -2,7 +2,7 @@ package org.open.solution.idempotent.config;
 
 import org.open.solution.distributed.lock.core.DistributedLockFactory;
 import org.open.solution.idempotent.core.*;
-import org.open.solution.idempotent.core.scene.dcl.IdempotentDclHandler;
+import org.open.solution.idempotent.core.scene.dlc.IdempotentDLCHandler;
 import org.open.solution.idempotent.core.scene.state.IdempotentStateHandler;
 import org.open.solution.idempotent.core.type.param.IdempotentParamExecuteHandler;
 import org.open.solution.idempotent.core.type.spel.IdempotentSpELExecuteHandler;
@@ -83,13 +83,13 @@ public class IdempotentAutoConfiguration {
   }
 
   /**
-   * DCL模式幂等
+   * DLC模式幂等
    * @param distributedLockFactory 分布式锁工厂
    * @param spELParser spel解析器
    */
   @Bean
-  public IdempotentDclHandler idempotentDclHandler(DistributedLockFactory distributedLockFactory, SpELParser spELParser) {
-    return new IdempotentDclHandler(distributedLockFactory, spELParser);
+  public IdempotentDLCHandler idempotentDLCHandler(DistributedLockFactory distributedLockFactory, SpELParser spELParser) {
+    return new IdempotentDLCHandler(distributedLockFactory, spELParser);
   }
 
   /**

@@ -6,9 +6,9 @@ package org.open.solution.idempotent.enums;
 public enum IdempotentSceneEnum {
 
     /**
-     * 基于 DCL 场景验证
+     * 基于 DLC 场景验证
      */
-    DCL,
+    DLC,
 
     /**
      * 基于 TOKEN 场景验证
