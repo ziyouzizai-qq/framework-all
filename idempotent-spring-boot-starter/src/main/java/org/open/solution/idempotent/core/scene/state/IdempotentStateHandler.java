@@ -72,10 +72,15 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
     IdempotentValidateParam param = (IdempotentValidateParam) IdempotentContext.removeLast();
     if (param != null) {
       try {
-        String state = stringRedisTemplate.opsForValue().get(param.getLockKey());
         // 根据validateIdempotent中对于null的情况，基于合理的consumingExpirationDate值，可以得出当state为null时
         // 说明当前线程执行业务逻辑时触发异常被删除，因此为了使得后续合理的重试请求可以得到继续，则保持未消费的状态。
-        if (StringUtils.hasLength(state)) {
+        boolean consumed = true;
+        String state = stringRedisTemplate.opsForValue().get(param.getLockKey());
+        if (!StringUtils.hasLength(state) && param.getIdempotent().enableProCheck()) {
+          consumed = false;
+        }
+
+        if (consumed) {
           stringRedisTemplate.opsForValue().set(param.getLockKey(),
               IdempotentStateEnum.CONSUMED.getCode(),
               param.getIdempotent().consumedExpirationDate(),
