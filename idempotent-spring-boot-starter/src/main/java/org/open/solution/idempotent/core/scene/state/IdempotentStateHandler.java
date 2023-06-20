@@ -59,7 +59,8 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
         // 1. 有另一个线程在消费.
         // 2. 有另一个线程执行业务逻辑前状态变更为CONSUMING后，还未执行业务逻辑，服务挂了，当前状态则一直到缓存过期，在这段期间
         // 后续合法的重试请求而得不到消费，因此要注意这种情况。
-        log.info("another thread is consuming.");
+        Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
+        logger.error("[{}] another task is currently being consumed.", param.getLockKey());
         throw new IdempotentException(param.getIdempotent().message());
       }
     } else {
@@ -74,17 +75,17 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
       try {
         // 根据validateIdempotent中对于null的情况，基于合理的consumingExpirationDate值，可以得出当state为null时
         // 说明当前线程执行业务逻辑时触发异常被删除，因此为了使得后续合理的重试请求可以得到继续，则保持未消费的状态。
-        boolean consumed = true;
         String state = stringRedisTemplate.opsForValue().get(param.getLockKey());
-        if (!StringUtils.hasLength(state) && param.getIdempotent().enableProCheck()) {
-          consumed = false;
-        }
-
-        if (consumed) {
-          stringRedisTemplate.opsForValue().set(param.getLockKey(),
-              IdempotentStateEnum.CONSUMED.getCode(),
-              param.getIdempotent().consumedExpirationDate(),
-              TimeUnit.SECONDS);
+        if (StringUtils.hasLength(state)) {
+          if (IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
+            stringRedisTemplate.opsForValue().set(param.getLockKey(),
+                IdempotentStateEnum.CONSUMED.getCode(),
+                param.getIdempotent().consumedExpirationDate(),
+                TimeUnit.SECONDS);
+          } else {
+            Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
+            logger.error("[{}] idempotency exception occurred, and the current state has been modified by another task.", param.getLockKey());
+          }
         }
       } catch (Throwable ex) {
         Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
@@ -96,7 +97,7 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
   @Override
   public void exceptionProcessing() {
     IdempotentValidateParam param = (IdempotentValidateParam) IdempotentContext.get();
-    if (param != null) {
+    if (param != null && param.getIdempotent().enableProCheck()) {
       try {
         stringRedisTemplate.delete(param.getLockKey());
       } catch (Throwable ex) {
