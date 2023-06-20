@@ -46,7 +46,6 @@ public class IdempotentTokenHandler extends AbstractIdempotentSceneHandler {
 
     @Override
     public void exceptionProcessing() {
-        // 将token重新塞回去
         IdempotentValidateParam param = (IdempotentValidateParam) IdempotentContext.get();
         if (param != null && param.getIdempotent().enableProCheck()) {
             stringRedisTemplate.opsForValue().set(param.getLockKey(), "",
