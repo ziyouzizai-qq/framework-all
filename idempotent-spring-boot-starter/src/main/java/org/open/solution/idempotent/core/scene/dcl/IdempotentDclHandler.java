@@ -65,9 +65,8 @@ public class IdempotentDclHandler extends AbstractIdempotentSceneHandler {
 
     private Boolean validateData(IdempotentValidateParam param) {
         // 执行业务层校验接口
-        Boolean validate = (Boolean) spELParser.parse(param.getIdempotent().validateApi(),
+        return (Boolean) spELParser.parse(param.getIdempotent().validateApi(),
                 ((MethodSignature) param.getJoinPoint().getSignature()).getMethod(),
                 param.getJoinPoint().getArgs());
-        return validate;
     }
 }
