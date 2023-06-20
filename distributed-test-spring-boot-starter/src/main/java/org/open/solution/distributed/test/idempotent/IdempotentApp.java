@@ -26,7 +26,7 @@ public class IdempotentApp {
   @DLCSpELIdempotent(
           validateApi = "@idempotentService.validateData(#uiIdempotent)",
           partKey = "#uiIdempotent.getId()",
-          message = "dcl: 操作次数过多")
+          message = "dlc: 操作次数过多")
   public String idempotentDLC(@RequestBody UiIdempotent uiIdempotent) {
 
     idempotentService.add(uiIdempotent);
