@@ -1,6 +1,5 @@
 package org.open.solution.idempotent.annotation.state;
 
-import org.open.solution.idempotent.annotation.Idempotent;
 import org.open.solution.idempotent.enums.IdempotentTypeEnum;
 import org.springframework.core.annotation.AliasFor;
 import java.lang.annotation.Documented;
