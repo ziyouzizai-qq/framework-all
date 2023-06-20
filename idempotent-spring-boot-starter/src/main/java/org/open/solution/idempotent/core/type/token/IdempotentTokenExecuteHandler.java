@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.open.solution.idempotent.config.IdempotentTokenProperties;
-import org.open.solution.idempotent.core.AbstractIdempotentTemplate;
+import org.open.solution.idempotent.core.AbstractIdempotentTypeHandler;
 import org.open.solution.idempotent.core.IdempotentValidateParam;
 import org.open.solution.idempotent.enums.IdempotentTypeEnum;
 import org.open.solution.idempotent.toolkit.SpELParser;
@@ -17,7 +17,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
-public final class IdempotentTokenExecuteHandler extends AbstractIdempotentTemplate implements IdempotentTokenService {
+public final class IdempotentTokenExecuteHandler extends AbstractIdempotentTypeHandler implements IdempotentTokenService {
 
     private static final String TOKEN_KEY = "idempotent-token";
 

@@ -4,9 +4,9 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.open.solution.idempotent.annotation.Idempotent;
 
 /**
- * 抽象模板处理器IdempotentExecuteHandler
+ * AbstractIdempotentTypeHandler
  */
-public abstract class AbstractIdempotentTemplate implements IdempotentExecuteHandler {
+public abstract class AbstractIdempotentTypeHandler implements IdempotentExecuteHandler {
 
     /**
      * 构建幂等验证过程中所需要的参数包装器

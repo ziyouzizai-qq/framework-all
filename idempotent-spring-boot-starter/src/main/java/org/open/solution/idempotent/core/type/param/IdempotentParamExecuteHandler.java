@@ -1,6 +1,6 @@
 package org.open.solution.idempotent.core.type.param;
 
-import org.open.solution.idempotent.core.AbstractIdempotentTemplate;
+import org.open.solution.idempotent.core.AbstractIdempotentTypeHandler;
 import org.open.solution.idempotent.core.IdempotentValidateParam;
 import org.open.solution.idempotent.enums.IdempotentTypeEnum;
 
@@ -10,7 +10,7 @@ import org.open.solution.idempotent.enums.IdempotentTypeEnum;
  * @author nj
  * @date 2023/6/15
  **/
-public class IdempotentParamExecuteHandler extends AbstractIdempotentTemplate implements IdempotentParamService {
+public class IdempotentParamExecuteHandler extends AbstractIdempotentTypeHandler implements IdempotentParamService {
 
   @Override
   public IdempotentTypeEnum type() {

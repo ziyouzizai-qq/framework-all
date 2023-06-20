@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.open.solution.idempotent.annotation.Idempotent;
-import org.open.solution.idempotent.core.AbstractIdempotentTemplate;
+import org.open.solution.idempotent.core.AbstractIdempotentTypeHandler;
 import org.open.solution.idempotent.core.IdempotentValidateParam;
 import org.open.solution.idempotent.enums.IdempotentTypeEnum;
 import org.open.solution.idempotent.toolkit.SpELParser;
@@ -17,7 +17,7 @@ import org.open.solution.idempotent.toolkit.SpELParser;
  * @date 2023/6/15
  **/
 @RequiredArgsConstructor
-public class IdempotentSpELExecuteHandler extends AbstractIdempotentTemplate implements IdempotentSpELService {
+public class IdempotentSpELExecuteHandler extends AbstractIdempotentTypeHandler implements IdempotentSpELService {
 
   private final SpELParser spELParser;
 
