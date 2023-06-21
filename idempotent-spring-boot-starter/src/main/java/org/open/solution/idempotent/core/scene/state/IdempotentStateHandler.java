@@ -80,10 +80,7 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
           // 说明当前线程执行业务逻辑时触发异常被删除，因此为了使得后续合理的重试请求可以得到继续，则保持未消费的状态。
           String state = stringRedisTemplate.opsForValue().get(param.getLockKey());
           if (StringUtils.hasLength(state) && IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
-            stringRedisTemplate.opsForValue().set(param.getLockKey(),
-                IdempotentStateEnum.CONSUMED.getCode(),
-                param.getIdempotent().consumedExpirationDate(),
-                TimeUnit.SECONDS);
+            consumed(param);
           }
         }
       } catch (Throwable ex) {
@@ -103,15 +100,19 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
         if (param.getIdempotent().enableProCheck()) {
           stringRedisTemplate.delete(param.getLockKey());
         } else {
-          stringRedisTemplate.opsForValue().set(param.getLockKey(),
-              IdempotentStateEnum.CONSUMED.getCode(),
-              param.getIdempotent().consumedExpirationDate(),
-              TimeUnit.SECONDS);
+          consumed(param);
         }
       } catch (Throwable ex) {
         Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
-        logger.error("[{}] Failed to delete state anti-heavy token.", param.getLockKey());
+        logger.error("[{}] Failed to set state anti-heavy token.", param.getLockKey());
       }
     }
+  }
+
+  private void consumed(IdempotentValidateParam param) {
+    stringRedisTemplate.opsForValue().set(param.getLockKey(),
+        IdempotentStateEnum.CONSUMED.getCode(),
+        param.getIdempotent().consumedExpirationDate(),
+        TimeUnit.SECONDS);
   }
 }
