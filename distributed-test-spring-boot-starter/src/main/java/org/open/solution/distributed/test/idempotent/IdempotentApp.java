@@ -48,13 +48,13 @@ public class IdempotentApp {
   @StateSpELIdempotent(
       partKey = "#uiIdempotent.getId()",
       message = "state: 操作次数过多",
-      consumingExpirationDate = 6,
+      consumingExpirationDate = 20,
       consumedExpirationDate = 20,
       resetException = true)
   public String idempotentState(@RequestBody UiIdempotent uiIdempotent) throws InterruptedException {
     idempotentService.add(uiIdempotent);
-//    Thread.sleep(5 * 1000);
     int i = 1/ uiIdempotent.getZ();
+    Thread.sleep(5 * 1000);
     return "1111";
   }
 }

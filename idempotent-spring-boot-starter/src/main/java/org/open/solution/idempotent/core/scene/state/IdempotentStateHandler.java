@@ -51,18 +51,15 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
       // state 为null的情况，以下两种情况对consumingExpirationDate的设置合理性要高，才能避免为null
       // 1.上面设置超时运行到此处正好过期，这种情况不可能，consumingExpirationDate为业务逻辑时间要长，而且这几行代码没有耗时，除非redis极慢
       // 2.被其他线程调用exceptionProcessing，也不会，正常情况如果consumingExpirationDate值合理，异常后都是当前线程来调用，然而exceptionProcessing在当前方法后面执行
-      // 因此这种情况也很少出现
-      if (IdempotentStateEnum.CONSUMED.getCode().equals(state)) {
-        IdempotentContext.put(null);
-        throw new IdempotentException(param.getIdempotent().message());
-      } else if (IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
+      // 因此这种情况在正常情况无法出现
+      if (IdempotentStateEnum.CONSUMED.getCode().equals(state) || IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
         IdempotentContext.put(null);
         // 该状态有两种可能
         // 1. 有另一个线程在消费.
         // 2. 有另一个线程执行业务逻辑前状态变更为CONSUMING后，还未执行业务逻辑，服务挂了，当前状态则一直到缓存过期，在这段期间
         // 后续合法的重试请求而得不到消费，因此要注意这种情况。
         Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
-        logger.error("[{}] another task is currently being consumed.", param.getLockKey());
+        logger.error("[{}] another one is currently being consumed or has already been consumed.", param.getLockKey());
         throw new IdempotentException(param.getIdempotent().message());
       } else if (IdempotentStateEnum.CONSUME_ERROR.getCode().equals(state)) {
         Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
