@@ -5,7 +5,7 @@ package org.open.solution.idempotent.core;
  */
 public class IdempotentConfigException extends RuntimeException {
 
-    public IdempotentConfigException(String errorMessage) {
-        super(errorMessage);
-    }
+  public IdempotentConfigException(String errorMessage) {
+    super(errorMessage);
+  }
 }

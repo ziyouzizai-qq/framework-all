@@ -8,13 +8,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class IdempotentTokenController {
 
-    private final IdempotentTokenService idempotentTokenService;
+  private final IdempotentTokenService idempotentTokenService;
 
-    /**
-     * 请求申请Token
-     */
-    @GetMapping("/token")
-    public String createToken() {
-        return idempotentTokenService.createToken();
-    }
+  /**
+   * 请求申请Token
+   */
+  @GetMapping("/token")
+  public String createToken() {
+    return idempotentTokenService.createToken();
+  }
 }

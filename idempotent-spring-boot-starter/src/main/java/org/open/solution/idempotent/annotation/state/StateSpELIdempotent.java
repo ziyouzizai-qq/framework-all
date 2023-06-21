@@ -15,33 +15,33 @@ import java.lang.annotation.Target;
 @StateIdempotent(type = IdempotentTypeEnum.SPEL)
 public @interface StateSpELIdempotent {
 
-    /**
-     * 幂等Key，只有在 {@link Idempotent#type()} 为 {@link IdempotentTypeEnum#SPEL} 时生效
-     */
-    @AliasFor(annotation = Idempotent.class, attribute = "partKey")
-    String partKey();
+  /**
+   * 幂等Key，只有在 {@link Idempotent#type()} 为 {@link IdempotentTypeEnum#SPEL} 时生效
+   */
+  @AliasFor(annotation = Idempotent.class, attribute = "partKey")
+  String partKey();
 
-    /**
-     * state模式下消费中的时效
-     */
-    @AliasFor(annotation = StateIdempotent.class, attribute = "consumingExpirationDate")
-    long consumingExpirationDate() default 30;
+  /**
+   * state模式下消费中的时效
+   */
+  @AliasFor(annotation = StateIdempotent.class, attribute = "consumingExpirationDate")
+  long consumingExpirationDate() default 30;
 
-    /**
-     * state模式下消费完的时效
-     */
-    @AliasFor(annotation = StateIdempotent.class, attribute = "consumedExpirationDate")
-    long consumedExpirationDate() default 60 * 10;
+  /**
+   * state模式下消费完的时效
+   */
+  @AliasFor(annotation = StateIdempotent.class, attribute = "consumedExpirationDate")
+  long consumedExpirationDate() default 60 * 10;
 
-    /**
-     * 业务异常后是否重置当前token
-     */
-    @AliasFor(annotation = StateIdempotent.class, attribute = "resetException")
-    boolean resetException() default false;
+  /**
+   * 业务异常后是否重置当前token
+   */
+  @AliasFor(annotation = StateIdempotent.class, attribute = "resetException")
+  boolean resetException() default false;
 
-    /**
-     * 触发幂等失败逻辑时，返回的错误提示信息
-     */
-    @AliasFor(annotation = StateIdempotent.class, attribute = "message")
-    String message() default "您操作太快，请稍后再试";
+  /**
+   * 触发幂等失败逻辑时，返回的错误提示信息
+   */
+  @AliasFor(annotation = StateIdempotent.class, attribute = "message")
+  String message() default "您操作太快，请稍后再试";
 }

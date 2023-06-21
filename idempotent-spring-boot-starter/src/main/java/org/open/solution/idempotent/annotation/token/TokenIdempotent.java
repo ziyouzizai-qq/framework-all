@@ -13,21 +13,21 @@ import java.lang.annotation.*;
 @Idempotent(scene = IdempotentSceneEnum.TOKEN, type = IdempotentTypeEnum.TOKEN)
 public @interface TokenIdempotent {
 
-    /**
-     * 通过spEl表达式获取token
-     */
-    @AliasFor(annotation = Idempotent.class, attribute = "partKey")
-    String partKey() default "@idempotentTokenExecuteHandler.defaultToken()";
+  /**
+   * 通过spEl表达式获取token
+   */
+  @AliasFor(annotation = Idempotent.class, attribute = "partKey")
+  String partKey() default "@idempotentTokenExecuteHandler.defaultToken()";
 
-    /**
-     * 业务异常后是否重置当前token
-     */
-    @AliasFor(annotation = Idempotent.class, attribute = "enableProCheck")
-    boolean resetException() default false;
+  /**
+   * 业务异常后是否重置当前token
+   */
+  @AliasFor(annotation = Idempotent.class, attribute = "enableProCheck")
+  boolean resetException() default false;
 
-    /**
-     * 触发幂等失败逻辑时，返回的错误提示信息
-     */
-    @AliasFor(annotation = Idempotent.class, attribute = "message")
-    String message() default "您操作太快，请稍后再试";
+  /**
+   * 触发幂等失败逻辑时，返回的错误提示信息
+   */
+  @AliasFor(annotation = Idempotent.class, attribute = "message")
+  String message() default "您操作太快，请稍后再试";
 }

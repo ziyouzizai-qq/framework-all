@@ -7,7 +7,7 @@ import org.open.solution.idempotent.core.IdempotentConfigException;
  */
 public class TokenNotFoundException extends IdempotentConfigException {
 
-    public TokenNotFoundException(String errorMessage) {
-        super(errorMessage);
-    }
+  public TokenNotFoundException(String errorMessage) {
+    super(errorMessage);
+  }
 }

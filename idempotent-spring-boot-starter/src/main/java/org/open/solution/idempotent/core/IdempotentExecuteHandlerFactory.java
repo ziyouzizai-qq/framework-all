@@ -11,15 +11,15 @@ import static java.util.function.Function.identity;
  */
 public final class IdempotentExecuteHandlerFactory {
 
-    private final Map<IdempotentTypeEnum, IdempotentExecuteHandler> idempotentExecuteHandlers;
+  private final Map<IdempotentTypeEnum, IdempotentExecuteHandler> idempotentExecuteHandlers;
 
-    public IdempotentExecuteHandlerFactory(
-        Set<IdempotentExecuteHandler> idempotentExecuteHandlers) {
-        this.idempotentExecuteHandlers = idempotentExecuteHandlers.stream()
-            .collect(Collectors.toMap(IdempotentExecuteHandler::type, identity()));
-    }
+  public IdempotentExecuteHandlerFactory(
+      Set<IdempotentExecuteHandler> idempotentExecuteHandlers) {
+    this.idempotentExecuteHandlers = idempotentExecuteHandlers.stream()
+        .collect(Collectors.toMap(IdempotentExecuteHandler::type, identity()));
+  }
 
-    public IdempotentExecuteHandler getInstance(IdempotentTypeEnum type) {
-        return idempotentExecuteHandlers.get(type);
-    }
+  public IdempotentExecuteHandler getInstance(IdempotentTypeEnum type) {
+    return idempotentExecuteHandlers.get(type);
+  }
 }

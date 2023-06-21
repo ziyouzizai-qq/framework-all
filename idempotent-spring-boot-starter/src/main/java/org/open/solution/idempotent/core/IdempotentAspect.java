@@ -41,14 +41,14 @@ public class IdempotentAspect {
     } catch (IdempotentConfigException e) {
       Logger logger = LoggerFactory.getLogger(joinPoint.getTarget().getClass());
       logger.error("{}() method, idempotent config exception occurred, error message：{}",
-              joinPoint.getSignature().getName(),
-              e.getMessage());
+          joinPoint.getSignature().getName(),
+          e.getMessage());
       throw e;
     } catch (IdempotentException e) {
       Logger logger = LoggerFactory.getLogger(joinPoint.getTarget().getClass());
       logger.error("{}() method, idempotent exception occurred, error message：{}",
-              joinPoint.getSignature().getName(),
-              e.getMessage());
+          joinPoint.getSignature().getName(),
+          e.getMessage());
       throw e;
     } catch (Exception e) {
       // 业务异常处理
@@ -60,15 +60,17 @@ public class IdempotentAspect {
   }
 
   @Pointcut("@annotation(org.open.solution.idempotent.annotation.token.TokenIdempotent) ||" +
-          "@annotation(org.open.solution.idempotent.annotation.dlc.DLCParamIdempotent) ||" +
-          "@annotation(org.open.solution.idempotent.annotation.dlc.DLCSpELIdempotent) ||" +
-          "@annotation(org.open.solution.idempotent.annotation.state.StateParamIdempotent) ||" +
-          "@annotation(org.open.solution.idempotent.annotation.state.StateSpELIdempotent)")
-  public void idempotentMethods() {}
+      "@annotation(org.open.solution.idempotent.annotation.dlc.DLCParamIdempotent) ||" +
+      "@annotation(org.open.solution.idempotent.annotation.dlc.DLCSpELIdempotent) ||" +
+      "@annotation(org.open.solution.idempotent.annotation.state.StateParamIdempotent) ||" +
+      "@annotation(org.open.solution.idempotent.annotation.state.StateSpELIdempotent)")
+  public void idempotentMethods() {
+  }
 
   public static Idempotent getIdempotent(ProceedingJoinPoint joinPoint) throws NoSuchMethodException {
     MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
-    Method targetMethod = joinPoint.getTarget().getClass().getDeclaredMethod(methodSignature.getName(), methodSignature.getMethod().getParameterTypes());
+    Method targetMethod = joinPoint.getTarget().getClass()
+        .getDeclaredMethod(methodSignature.getName(), methodSignature.getMethod().getParameterTypes());
     return AnnotatedElementUtils.getMergedAnnotation(targetMethod, Idempotent.class);
   }
 }

@@ -18,39 +18,39 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class IdempotentTokenHandler extends AbstractIdempotentSceneHandler {
 
-    private final StringRedisTemplate stringRedisTemplate;
+  private final StringRedisTemplate stringRedisTemplate;
 
-    private final IdempotentTokenProperties idempotentTokenProperties;
+  private final IdempotentTokenProperties idempotentTokenProperties;
 
-    @Override
-    public IdempotentSceneEnum scene() {
-        return IdempotentSceneEnum.TOKEN;
+  @Override
+  public IdempotentSceneEnum scene() {
+    return IdempotentSceneEnum.TOKEN;
+  }
+
+  @Override
+  public void validateIdempotent(IdempotentValidateParam param) {
+    // 后置异常处理
+    IdempotentContext.put(param);
+
+    Boolean tokenDelFlag = stringRedisTemplate.delete(param.getLockKey());
+    if (Objects.nonNull(tokenDelFlag) && !tokenDelFlag) {
+      throw new IdempotentException(param.getIdempotent().message());
     }
 
-    @Override
-    public void validateIdempotent(IdempotentValidateParam param) {
-        // 后置异常处理
-        IdempotentContext.put(param);
+  }
 
-        Boolean tokenDelFlag = stringRedisTemplate.delete(param.getLockKey());
-        if (Objects.nonNull(tokenDelFlag) && !tokenDelFlag) {
-            throw new IdempotentException(param.getIdempotent().message());
-        }
+  @Override
+  public void postProcessing() {
+    IdempotentContext.removeLast();
+  }
 
+  @Override
+  public void exceptionProcessing() {
+    IdempotentValidateParam param = (IdempotentValidateParam) IdempotentContext.get();
+    if (param != null && param.getIdempotent().enableProCheck()) {
+      stringRedisTemplate.opsForValue().set(param.getLockKey(), "",
+          idempotentTokenProperties.getExpiredTime(),
+          TimeUnit.SECONDS);
     }
-
-    @Override
-    public void postProcessing() {
-        IdempotentContext.removeLast();
-    }
-
-    @Override
-    public void exceptionProcessing() {
-        IdempotentValidateParam param = (IdempotentValidateParam) IdempotentContext.get();
-        if (param != null && param.getIdempotent().enableProCheck()) {
-            stringRedisTemplate.opsForValue().set(param.getLockKey(), "",
-                idempotentTokenProperties.getExpiredTime(),
-                TimeUnit.SECONDS);
-        }
-    }
+  }
 }

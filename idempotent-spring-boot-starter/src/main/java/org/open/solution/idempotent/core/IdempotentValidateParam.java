@@ -12,19 +12,19 @@ import org.open.solution.idempotent.annotation.Idempotent;
 @Builder
 public class IdempotentValidateParam {
 
-    /**
-     * 注解
-     */
-    private Idempotent idempotent;
+  /**
+   * 注解
+   */
+  private Idempotent idempotent;
 
-    /**
-     * 切点
-     */
-    private ProceedingJoinPoint joinPoint;
+  /**
+   * 切点
+   */
+  private ProceedingJoinPoint joinPoint;
 
-    /**
-     * 锁标识
-     */
-    private String lockKey;
+  /**
+   * 锁标识
+   */
+  private String lockKey;
 
 }

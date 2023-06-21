@@ -15,6 +15,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Setter
 public class IdempotentTokenProperties {
 
-    private Long expiredTime = 600L;
+  private Long expiredTime = 600L;
 
 }

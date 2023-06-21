@@ -29,16 +29,16 @@ public class IdempotentSpELExecuteHandler extends AbstractIdempotentTypeHandler 
   @Override
   protected void buildValidateParam(IdempotentValidateParam idempotentValidateParam) {
     String lockKey = String.format("idempotent:path:%s:currentUserId:%s:md5:%s",
-            getPath(idempotentValidateParam.getJoinPoint()),
-            getCurrentUserId(),
-            calcPartArgsMD5(idempotentValidateParam.getJoinPoint(), idempotentValidateParam.getIdempotent()));
+        getPath(idempotentValidateParam.getJoinPoint()),
+        getCurrentUserId(),
+        calcPartArgsMD5(idempotentValidateParam.getJoinPoint(), idempotentValidateParam.getIdempotent()));
     idempotentValidateParam.setLockKey(lockKey);
   }
 
   private String calcPartArgsMD5(ProceedingJoinPoint joinPoint, Idempotent idempotent) {
     String partKey = (String) spELParser.parse(idempotent.partKey(),
-            ((MethodSignature) joinPoint.getSignature()).getMethod(),
-            joinPoint.getArgs());
+        ((MethodSignature) joinPoint.getSignature()).getMethod(),
+        joinPoint.getArgs());
 
     return DigestUtil.md5Hex(partKey);
   }

@@ -8,14 +8,14 @@ package org.open.solution.idempotent.core;
  **/
 public abstract class AbstractIdempotentSceneHandler implements IdempotentSceneHandler {
 
-    @Override
-    public void postProcessing() {
+  @Override
+  public void postProcessing() {
 
-    }
+  }
 
-    @Override
-    public void exceptionProcessing() {
+  @Override
+  public void exceptionProcessing() {
 
-    }
+  }
 
 }

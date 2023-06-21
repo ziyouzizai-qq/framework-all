@@ -17,55 +17,57 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
-public final class IdempotentTokenExecuteHandler extends AbstractIdempotentTypeHandler implements IdempotentTokenService {
+public final class IdempotentTokenExecuteHandler extends AbstractIdempotentTypeHandler
+    implements IdempotentTokenService {
 
-    private static final String TOKEN_KEY = "idempotent-token";
+  private static final String TOKEN_KEY = "idempotent-token";
 
-    private static final String TOKEN_PREFIX_KEY = "idempotent:token:";
+  private static final String TOKEN_PREFIX_KEY = "idempotent:token:";
 
-    private final SpELParser spELParser;
+  private final SpELParser spELParser;
 
-    private final StringRedisTemplate stringRedisTemplate;
+  private final StringRedisTemplate stringRedisTemplate;
 
-    private final IdempotentTokenProperties idempotentTokenProperties;
+  private final IdempotentTokenProperties idempotentTokenProperties;
 
-    @Override
-    protected void buildValidateParam(IdempotentValidateParam idempotentValidateParam) {
-        String token = (String) spELParser.parse(idempotentValidateParam.getIdempotent().partKey(),
-                ((MethodSignature) idempotentValidateParam.getJoinPoint().getSignature()).getMethod(),
-                idempotentValidateParam.getJoinPoint().getArgs());
+  @Override
+  protected void buildValidateParam(IdempotentValidateParam idempotentValidateParam) {
+    String token = (String) spELParser.parse(idempotentValidateParam.getIdempotent().partKey(),
+        ((MethodSignature) idempotentValidateParam.getJoinPoint().getSignature()).getMethod(),
+        idempotentValidateParam.getJoinPoint().getArgs());
+    if (StrUtil.isBlank(token)) {
+      HttpServletRequest request =
+          ((ServletRequestAttributes) (RequestContextHolder.currentRequestAttributes())).getRequest();
+      token = request.getHeader(TOKEN_KEY);
+      if (StrUtil.isBlank(token)) {
+        token = request.getParameter(TOKEN_KEY);
         if (StrUtil.isBlank(token)) {
-            HttpServletRequest request = ((ServletRequestAttributes) (RequestContextHolder.currentRequestAttributes())).getRequest();
-            token = request.getHeader(TOKEN_KEY);
-            if (StrUtil.isBlank(token)) {
-                token = request.getParameter(TOKEN_KEY);
-                if (StrUtil.isBlank(token)) {
-                    throw new TokenNotFoundException("token not found.");
-                }
-            }
+          throw new TokenNotFoundException("token not found.");
         }
-        String lockKey = lockKey(token);
-        idempotentValidateParam.setLockKey(lockKey);
+      }
     }
+    String lockKey = lockKey(token);
+    idempotentValidateParam.setLockKey(lockKey);
+  }
 
-    @Override
-    public IdempotentTypeEnum type() {
-        return IdempotentTypeEnum.TOKEN;
-    }
+  @Override
+  public IdempotentTypeEnum type() {
+    return IdempotentTypeEnum.TOKEN;
+  }
 
-    @Override
-    public String createToken() {
-        String uuid = UUID.randomUUID().toString();
-        String token = lockKey(uuid);
-        stringRedisTemplate.opsForValue().set(token, "", idempotentTokenProperties.getExpiredTime(), TimeUnit.SECONDS);
-        return uuid;
-    }
+  @Override
+  public String createToken() {
+    String uuid = UUID.randomUUID().toString();
+    String token = lockKey(uuid);
+    stringRedisTemplate.opsForValue().set(token, "", idempotentTokenProperties.getExpiredTime(), TimeUnit.SECONDS);
+    return uuid;
+  }
 
-    public String defaultToken() {
-        return "";
-    }
+  public String defaultToken() {
+    return "";
+  }
 
-    private String lockKey(String uuid) {
-        return TOKEN_PREFIX_KEY + uuid;
-    }
+  private String lockKey(String uuid) {
+    return TOKEN_PREFIX_KEY + uuid;
+  }
 }
