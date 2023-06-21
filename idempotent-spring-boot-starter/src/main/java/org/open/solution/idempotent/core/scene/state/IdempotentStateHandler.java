@@ -11,7 +11,6 @@ import org.open.solution.idempotent.enums.IdempotentStateEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.util.StringUtils;
 
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +25,8 @@ import java.util.concurrent.TimeUnit;
 public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
 
   private final StringRedisTemplate stringRedisTemplate;
+
+  private final long ERROR = 2;
 
   @Override
   public IdempotentSceneEnum scene() {
@@ -42,7 +43,7 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
     // 3.误操作redis导致，比如说时效性未到就删除数据
     Boolean setIfAbsent = stringRedisTemplate.opsForValue()
         .setIfAbsent(lockKey, IdempotentStateEnum.CONSUMING.getCode(), param.getIdempotent().consumingExpirationDate(), TimeUnit.SECONDS);
-
+    long startTime = System.currentTimeMillis();
 
     if (setIfAbsent != null && !setIfAbsent) {
       IdempotentContext.put(null);
@@ -62,6 +63,21 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
         Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
         logger.error("[{}] another task is currently being consumed.", param.getLockKey());
         throw new IdempotentException(param.getIdempotent().message());
+      } else if (IdempotentStateEnum.CONSUME_ERROR.getCode().equals(state)) {
+        Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
+        logger.error("[{}] another task consumption exception, waiting for the lock to be released.", param.getLockKey());
+        while (System.currentTimeMillis() - startTime <= ERROR * 1000) {
+          setIfAbsent = stringRedisTemplate.opsForValue()
+              .setIfAbsent(lockKey, IdempotentStateEnum.CONSUMING.getCode(), param.getIdempotent().consumingExpirationDate(), TimeUnit.SECONDS);
+          if (setIfAbsent != null && setIfAbsent) {
+            break;
+          }
+        }
+        if (setIfAbsent != null && setIfAbsent) {
+          IdempotentContext.put(param);
+        } else {
+          throw new IdempotentException(param.getIdempotent().message());
+        }
       }
     } else {
       IdempotentContext.put(param);
@@ -73,24 +89,11 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
     IdempotentValidateParam param = (IdempotentValidateParam) IdempotentContext.removeLast();
     if (param != null) {
       try {
-        // 根据validateIdempotent中对于null的情况，基于合理的consumingExpirationDate值，可以得出当state为null时
-        // 说明当前线程执行业务逻辑时触发异常被删除，因此为了使得后续合理的重试请求可以得到继续，则保持未消费的状态。
         String state = stringRedisTemplate.opsForValue().get(param.getLockKey());
-        if (StringUtils.hasLength(state)) {
-          if (IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
-            stringRedisTemplate.opsForValue().set(param.getLockKey(),
-                IdempotentStateEnum.CONSUMED.getCode(),
-                param.getIdempotent().consumedExpirationDate(),
-                TimeUnit.SECONDS);
-          } else {
-            Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
-            logger.error("[{}] idempotency exception occurred, and the current state has been modified by another task.", param.getLockKey());
-          }
-        } else {
-          if (!param.getIdempotent().enableProCheck()) {
-            Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
-            logger.error("[{}] idempotency exception occurred, and the current state has been modified by another task.", param.getLockKey());
-          }
+        if (IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
+          setValToRedis(param.getLockKey(), IdempotentStateEnum.CONSUMED.getCode(), param.getIdempotent().consumedExpirationDate());
+        } else if (IdempotentStateEnum.CONSUME_ERROR.getCode().equals(state)) {
+          stringRedisTemplate.delete(param.getLockKey());
         }
       } catch (Throwable ex) {
         Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
@@ -102,13 +105,25 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
   @Override
   public void exceptionProcessing() {
     IdempotentValidateParam param = (IdempotentValidateParam) IdempotentContext.get();
-    if (param != null && param.getIdempotent().enableProCheck()) {
+    if (param != null) {
       try {
-        stringRedisTemplate.delete(param.getLockKey());
+        if (param.getIdempotent().enableProCheck()) {
+          // 业务系统异常后设置error状态为2s
+          setValToRedis(param.getLockKey(), IdempotentStateEnum.CONSUME_ERROR.getCode(), ERROR);
+        } else {
+          setValToRedis(param.getLockKey(), IdempotentStateEnum.CONSUMED.getCode(), param.getIdempotent().consumedExpirationDate());
+        }
       } catch (Throwable ex) {
         Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
         logger.error("[{}] Failed to delete state anti-heavy token.", param.getLockKey());
       }
     }
+  }
+
+  private void setValToRedis(String key, String val, long timeout) {
+    stringRedisTemplate.opsForValue().set(key,
+        val,
+        timeout,
+        TimeUnit.SECONDS);
   }
 }
