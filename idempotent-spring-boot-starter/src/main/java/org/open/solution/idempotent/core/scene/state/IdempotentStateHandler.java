@@ -26,7 +26,7 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
 
   private final StringRedisTemplate stringRedisTemplate;
 
-  private final long ERROR = 2;
+  private final long ERROR = 3;
 
   @Override
   public IdempotentSceneEnum scene() {
