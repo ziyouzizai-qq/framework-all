@@ -11,6 +11,7 @@ import org.open.solution.idempotent.enums.IdempotentStateEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.util.StringUtils;
 
 import java.util.concurrent.TimeUnit;
 
@@ -25,8 +26,6 @@ import java.util.concurrent.TimeUnit;
 public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
 
   private final StringRedisTemplate stringRedisTemplate;
-
-  private final long ERROR = 3;
 
   @Override
   public IdempotentSceneEnum scene() {
@@ -44,43 +43,26 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
     Boolean setIfAbsent = stringRedisTemplate.opsForValue()
         .setIfAbsent(lockKey, IdempotentStateEnum.CONSUMING.getCode(), param.getIdempotent().consumingExpirationDate(),
             TimeUnit.SECONDS);
-    long startTime = System.currentTimeMillis();
+
 
     if (setIfAbsent != null && !setIfAbsent) {
+      IdempotentContext.put(null);
       String state = stringRedisTemplate.opsForValue().get(lockKey);
 
       // state 为null的情况，以下两种情况对consumingExpirationDate的设置合理性要高，才能避免为null
       // 1.上面设置超时运行到此处正好过期，这种情况不可能，consumingExpirationDate为业务逻辑时间要长，而且这几行代码没有耗时，除非redis极慢
       // 2.被其他线程调用exceptionProcessing，也不会，正常情况如果consumingExpirationDate值合理，异常后都是当前线程来调用，然而exceptionProcessing在当前方法后面执行
-      // 因此这种情况在正常情况无法出现
-      if (IdempotentStateEnum.CONSUMED.getCode().equals(state) ||
-          IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
-        IdempotentContext.put(null);
+      // 因此这种情况也很少出现
+      if (IdempotentStateEnum.CONSUMED.getCode().equals(state)) {
+        throw new IdempotentException(param.getIdempotent().message());
+      } else if (IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
         // 该状态有两种可能
         // 1. 有另一个线程在消费.
         // 2. 有另一个线程执行业务逻辑前状态变更为CONSUMING后，还未执行业务逻辑，服务挂了，当前状态则一直到缓存过期，在这段期间
         // 后续合法的重试请求而得不到消费，因此要注意这种情况。
         Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
-        logger.error("[{}] another task is currently being consumed or has already been consumed.", param.getLockKey());
+        logger.error("[{}] another task is currently being consumed.", param.getLockKey());
         throw new IdempotentException(param.getIdempotent().message());
-      } else if (IdempotentStateEnum.CONSUME_ERROR.getCode().equals(state)) {
-        Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
-        logger.error("[{}] another task consumption exception, waiting for the lock to be released.",
-            param.getLockKey());
-        while (System.currentTimeMillis() - startTime <= ERROR * 1000) {
-          setIfAbsent = stringRedisTemplate.opsForValue()
-              .setIfAbsent(lockKey, IdempotentStateEnum.CONSUMING.getCode(),
-                  param.getIdempotent().consumingExpirationDate(), TimeUnit.SECONDS);
-          if (setIfAbsent != null && setIfAbsent) {
-            break;
-          }
-        }
-        if (setIfAbsent != null && setIfAbsent) {
-          IdempotentContext.put(param);
-        } else {
-          IdempotentContext.put(null);
-          throw new IdempotentException(param.getIdempotent().message());
-        }
       }
     } else {
       IdempotentContext.put(param);
@@ -92,12 +74,17 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
     IdempotentValidateParam param = (IdempotentValidateParam) IdempotentContext.removeLast();
     if (param != null) {
       try {
-        String state = stringRedisTemplate.opsForValue().get(param.getLockKey());
-        if (IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
-          setValToRedis(param.getLockKey(), IdempotentStateEnum.CONSUMED.getCode(),
-              param.getIdempotent().consumedExpirationDate());
-        } else if (IdempotentStateEnum.CONSUME_ERROR.getCode().equals(state)) {
-          stringRedisTemplate.delete(param.getLockKey());
+        if (!param.isExceptionMark()) {
+          // 根据validateIdempotent中对于null的情况，基于合理的consumingExpirationDate值，可以得出当state为null时
+          // 说明当前线程执行业务逻辑时触发异常被删除，因此为了使得后续合理的重试请求可以得到继续，则保持未消费的状态。
+          String state = stringRedisTemplate.opsForValue().get(param.getLockKey());
+          if (StringUtils.hasLength(state) &&
+              IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
+            stringRedisTemplate.opsForValue().set(param.getLockKey(),
+                IdempotentStateEnum.CONSUMED.getCode(),
+                param.getIdempotent().consumedExpirationDate(),
+                TimeUnit.SECONDS);
+          }
         }
       } catch (Throwable ex) {
         Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
@@ -110,25 +97,21 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
   public void exceptionProcessing() {
     IdempotentValidateParam param = (IdempotentValidateParam) IdempotentContext.get();
     if (param != null) {
+      // 设置异常标记
+      param.setExceptionMark(true);
       try {
         if (param.getIdempotent().enableProCheck()) {
-          // 业务系统异常后设置error状态为2s
-          setValToRedis(param.getLockKey(), IdempotentStateEnum.CONSUME_ERROR.getCode(), ERROR);
+          stringRedisTemplate.delete(param.getLockKey());
         } else {
-          setValToRedis(param.getLockKey(), IdempotentStateEnum.CONSUMED.getCode(),
-              param.getIdempotent().consumedExpirationDate());
+          stringRedisTemplate.opsForValue().set(param.getLockKey(),
+              IdempotentStateEnum.CONSUMED.getCode(),
+              param.getIdempotent().consumedExpirationDate(),
+              TimeUnit.SECONDS);
         }
       } catch (Throwable ex) {
         Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
         logger.error("[{}] Failed to delete state anti-heavy token.", param.getLockKey());
       }
     }
-  }
-
-  private void setValToRedis(String key, String val, long timeout) {
-    stringRedisTemplate.opsForValue().set(key,
-        val,
-        timeout,
-        TimeUnit.SECONDS);
   }
 }

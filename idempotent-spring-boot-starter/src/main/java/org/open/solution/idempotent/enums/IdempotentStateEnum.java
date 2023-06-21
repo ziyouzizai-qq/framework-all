@@ -18,13 +18,7 @@ public enum IdempotentStateEnum {
   /**
    * 已消费
    */
-  CONSUMED("1"),
-
-  /**
-   * 消费异常
-   */
-  CONSUME_ERROR("2");
-
+  CONSUMED("1");
 
   @Getter
   private final String code;

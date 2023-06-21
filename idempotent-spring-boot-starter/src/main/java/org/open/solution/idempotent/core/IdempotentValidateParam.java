@@ -27,4 +27,9 @@ public class IdempotentValidateParam {
    */
   private String lockKey;
 
+  /**
+   * 异常标记
+   */
+  private boolean exceptionMark;
+
 }
