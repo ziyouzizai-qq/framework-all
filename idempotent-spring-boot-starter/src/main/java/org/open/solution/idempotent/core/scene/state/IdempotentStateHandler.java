@@ -61,7 +61,7 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
         // 2. 有另一个线程执行业务逻辑前状态变更为CONSUMING后，还未执行业务逻辑，服务挂了，当前状态则一直到缓存过期，在这段期间
         // 后续合法的重试请求而得不到消费，因此要注意这种情况。
         Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
-        logger.error("[{}] another one is currently being consumed or has already been consumed.", param.getLockKey());
+        logger.error("[{}] another task is currently being consumed or has already been consumed.", param.getLockKey());
         throw new IdempotentException(param.getIdempotent().message());
       } else if (IdempotentStateEnum.CONSUME_ERROR.getCode().equals(state)) {
         Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
