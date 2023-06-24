@@ -1,5 +1,6 @@
 package org.open.solution.idempotent.core.scene.dlc;
 
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.open.solution.distributed.lock.core.DistributedLock;
@@ -9,7 +10,12 @@ import org.open.solution.idempotent.core.IdempotentContext;
 import org.open.solution.idempotent.core.IdempotentException;
 import org.open.solution.idempotent.core.IdempotentValidateParam;
 import org.open.solution.idempotent.enums.IdempotentSceneEnum;
+import org.open.solution.idempotent.enums.IdempotentStateEnum;
 import org.open.solution.idempotent.toolkit.SpELParser;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.util.StringUtils;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * DLC幂等处理器
@@ -21,6 +27,10 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
 
     private final SpELParser spELParser;
 
+    private final StringRedisTemplate stringRedisTemplate;
+
+    private final static String CONSUMED = ":CONSUMED";
+
     @Override
     public IdempotentSceneEnum scene() {
         return IdempotentSceneEnum.DLC;
@@ -28,44 +38,87 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
 
     @Override
     public void validateIdempotent(IdempotentValidateParam param) {
-        if (param.getIdempotent().enableProCheck() && !validateData(param)) {
-            IdempotentContext.put(null);
+        IdempotentDLCWrapper idempotentDLCWrapper = IdempotentDLCWrapper.builder().param(param).build();
+        IdempotentContext.put(idempotentDLCWrapper);
+        if (param.getIdempotent().enableProCheck() && validateData(param)) {
             throw new IdempotentException(param.getIdempotent().message());
         }
 
         DistributedLock lock = distributedLockFactory.getLock(param.getLockKey());
         if (!lock.tryLock()) {
-            IdempotentContext.put(null);
             throw new IdempotentException(param.getIdempotent().message());
         } else {
             // 将分布式锁放入上下文
-            IdempotentContext.put(lock);
-            if (!validateData(param)) {
+            idempotentDLCWrapper.lock = lock;
+            if (validateData(param)) {
                 throw new IdempotentException(param.getIdempotent().message());
             }
+            // 正在消费中...
+            idempotentDLCWrapper.state = IdempotentStateEnum.CONSUMING;
         }
     }
 
     @Override
     public void postProcessing() {
-        DistributedLock lock = null;
+        IdempotentDLCWrapper wrapper = null;
         try {
-            lock = (DistributedLock) IdempotentContext.removeLast();
+            wrapper = (IdempotentDLCWrapper) IdempotentContext.removeLast();
         } finally {
-            if (lock != null) {
-                lock.unlock();
+            if (wrapper != null && wrapper.lock != null) {
+                if (IdempotentStateEnum.CONSUMING == wrapper.state && // 必须是正在消费的线程
+                        !StringUtils.hasLength(wrapper.param.getIdempotent().validateApi()) && // 必须是默认的消费规则
+                        (!wrapper.exMark || !wrapper.param.getIdempotent().resetException())) {
+
+                    // 默认消费模式
+                    stringRedisTemplate.opsForValue().set(
+                            consumedKey(wrapper.param.getLockKey()), CONSUMED,
+                            wrapper.param.getIdempotent().consumedExpirationDate(),
+                            TimeUnit.SECONDS);
+
+                }
+                wrapper.lock.unlock();
             }
         }
     }
 
-    public boolean validateData() {
-        return true;
+    @Override
+    public void exceptionProcessing() {
+        IdempotentDLCWrapper wrapper = (IdempotentDLCWrapper) IdempotentContext.get();
+        if (wrapper != null) {
+            wrapper.exMark = true;
+        }
     }
 
     private Boolean validateData(IdempotentValidateParam param) {
-        // 执行业务层校验接口
-        return (Boolean) spELParser.parse(param.getIdempotent().validateApi(),
-                ((MethodSignature) param.getJoinPoint().getSignature()).getMethod(),
-                param.getJoinPoint().getArgs());
+        if (StringUtils.hasLength(param.getIdempotent().validateApi())) {
+            // 执行业务层校验接口
+            return (Boolean) spELParser.parse(param.getIdempotent().validateApi(),
+                    ((MethodSignature) param.getJoinPoint().getSignature()).getMethod(),
+                    param.getJoinPoint().getArgs());
+
+        } else {
+            // 默认消费规则
+            return stringRedisTemplate.hasKey(consumedKey(param.getLockKey()));
+        }
+    }
+
+    private String consumedKey(String lockKey) {
+        return lockKey + CONSUMED;
+    }
+
+    @Builder
+    private static class IdempotentDLCWrapper {
+
+        private IdempotentValidateParam param;
+
+        private DistributedLock lock;
+
+        private IdempotentStateEnum state;
+
+        /**
+         * 业务是否异常标记
+         */
+        private boolean exMark;
+
     }
 }

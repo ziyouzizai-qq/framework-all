@@ -22,8 +22,8 @@ public @interface TokenIdempotent {
     /**
      * 业务异常后是否重置当前token
      */
-    @AliasFor(annotation = Idempotent.class, attribute = "enableProCheck")
-    boolean resetException() default false;
+    @AliasFor(annotation = Idempotent.class, attribute = "resetException")
+    boolean resetException() default true;
 
     /**
      * 触发幂等失败逻辑时，返回的错误提示信息

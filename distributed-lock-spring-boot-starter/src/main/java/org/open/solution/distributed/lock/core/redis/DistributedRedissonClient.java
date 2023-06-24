@@ -18,6 +18,6 @@ public class DistributedRedissonClient implements DistributedLockClient {
 
   @Override
   public DistributedLock getLock(String key) {
-    return new DistributedRLock(redissonClient.getLock(key));
+    return new DistributedRLock(redissonClient.getLock(key), key);
   }
 }

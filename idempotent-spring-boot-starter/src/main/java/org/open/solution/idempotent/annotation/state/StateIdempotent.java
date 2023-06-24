@@ -31,8 +31,8 @@ public @interface StateIdempotent {
     /**
      * 业务异常后是否重置当前token
      */
-    @AliasFor(annotation = Idempotent.class, attribute = "enableProCheck")
-    boolean resetException() default false;
+    @AliasFor(annotation = Idempotent.class, attribute = "resetException")
+    boolean resetException() default true;
 
     /**
      * state模式下消费中的时效

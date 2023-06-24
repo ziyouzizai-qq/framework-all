@@ -38,9 +38,14 @@ public @interface Idempotent {
     boolean enableProCheck() default false;
 
     /**
+     * 异常是否重置
+     */
+    boolean resetException() default true;
+
+    /**
      * DLC业务层校验
      */
-    String validateApi() default "@idempotentDLCHandler.validateData()";
+    String validateApi() default "";
 
     /**
      * state模式下消费中的时效

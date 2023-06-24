@@ -29,11 +29,24 @@ public @interface DLCIdempotent {
      * BLOCK 情况需要业务层校验
      */
     @AliasFor(annotation = Idempotent.class, attribute = "validateApi")
-    String validateApi() default "@idempotentDLCHandler.validateData()";
+    String validateApi() default "";
+
+    /**
+     * 业务异常后是否重置当前token
+     */
+    @AliasFor(annotation = Idempotent.class, attribute = "resetException")
+    boolean resetException() default true;
+
+    /**
+     * 默认幂等失效期
+     */
+    @AliasFor(annotation = Idempotent.class, attribute = "consumedExpirationDate")
+    long consumedExpirationDate() default 60 * 10;
 
     /**
      * 触发幂等失败逻辑时，返回的错误提示信息
      */
     @AliasFor(annotation = Idempotent.class, attribute = "message")
     String message() default "您操作太快，请稍后再试";
+
 }

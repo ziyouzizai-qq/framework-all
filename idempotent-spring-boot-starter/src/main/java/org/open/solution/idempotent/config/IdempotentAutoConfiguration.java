@@ -88,8 +88,10 @@ public class IdempotentAutoConfiguration {
    * @param spELParser spel解析器
    */
   @Bean
-  public IdempotentDLCHandler idempotentDLCHandler(DistributedLockFactory distributedLockFactory, SpELParser spELParser) {
-    return new IdempotentDLCHandler(distributedLockFactory, spELParser);
+  public IdempotentDLCHandler idempotentDLCHandler(DistributedLockFactory distributedLockFactory,
+                                                   SpELParser spELParser,
+                                                   StringRedisTemplate stringRedisTemplate) {
+    return new IdempotentDLCHandler(distributedLockFactory, spELParser, stringRedisTemplate);
   }
 
   /**
