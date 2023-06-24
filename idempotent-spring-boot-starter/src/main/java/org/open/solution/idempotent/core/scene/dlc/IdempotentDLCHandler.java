@@ -38,9 +38,12 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
 
     @Override
     public void validateIdempotent(IdempotentValidateParam param) {
-        IdempotentDLCWrapper idempotentDLCWrapper = IdempotentDLCWrapper.builder().param(param).build();
+        IdempotentDLCWrapper idempotentDLCWrapper = IdempotentDLCWrapper.builder()
+                .param(param)
+                .defaultConsumed(!StringUtils.hasLength(param.getIdempotent().validateApi()))
+                .build();
         IdempotentContext.put(idempotentDLCWrapper);
-        if (param.getIdempotent().enableProCheck() && validateData(param)) {
+        if (param.getIdempotent().enableProCheck() && validateData(idempotentDLCWrapper)) {
             throw new IdempotentException(param.getIdempotent().message());
         }
 
@@ -50,7 +53,7 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
         } else {
             // 将分布式锁放入上下文
             idempotentDLCWrapper.lock = lock;
-            if (validateData(param)) {
+            if (validateData(idempotentDLCWrapper)) {
                 throw new IdempotentException(param.getIdempotent().message());
             }
             // 正在消费中...
@@ -66,12 +69,12 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
         } finally {
             if (wrapper != null && wrapper.lock != null) {
                 if (IdempotentStateEnum.CONSUMING == wrapper.state && // 必须是正在消费的线程
-                        !StringUtils.hasLength(wrapper.param.getIdempotent().validateApi()) && // 必须是默认的消费规则
+                        wrapper.defaultConsumed && // 必须是默认的消费规则
                         (!wrapper.exMark || !wrapper.param.getIdempotent().resetException())) {
 
                     // 默认消费模式
                     stringRedisTemplate.opsForValue().set(
-                            consumedKey(wrapper.param.getLockKey()), CONSUMED,
+                            consumedKey(wrapper.param.getLockKey()), IdempotentStateEnum.CONSUMED.getCode(),
                             wrapper.param.getIdempotent().consumedExpirationDate(),
                             TimeUnit.SECONDS);
 
@@ -89,16 +92,15 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
         }
     }
 
-    private Boolean validateData(IdempotentValidateParam param) {
-        if (StringUtils.hasLength(param.getIdempotent().validateApi())) {
-            // 执行业务层校验接口
-            return (Boolean) spELParser.parse(param.getIdempotent().validateApi(),
-                    ((MethodSignature) param.getJoinPoint().getSignature()).getMethod(),
-                    param.getJoinPoint().getArgs());
-
-        } else {
+    private Boolean validateData(IdempotentDLCWrapper wrapper) {
+        if (wrapper.defaultConsumed) {
             // 默认消费规则
-            return stringRedisTemplate.hasKey(consumedKey(param.getLockKey()));
+            return stringRedisTemplate.hasKey(consumedKey(wrapper.param.getLockKey()));
+        } else {
+            // 执行业务层校验接口
+            return (Boolean) spELParser.parse(wrapper.param.getIdempotent().validateApi(),
+                    ((MethodSignature) wrapper.param.getJoinPoint().getSignature()).getMethod(),
+                    wrapper.param.getJoinPoint().getArgs());
         }
     }
 
@@ -119,6 +121,11 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
          * 业务是否异常标记
          */
         private boolean exMark;
+
+        /**
+         * 是否为默认消费
+         */
+        private boolean defaultConsumed;
 
     }
 }
