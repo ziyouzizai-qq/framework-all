@@ -47,7 +47,7 @@ public class IdempotentTokenHandler extends AbstractIdempotentSceneHandler {
   @Override
   public void exceptionProcessing() {
     IdempotentValidateParam param = (IdempotentValidateParam) IdempotentContext.get();
-    if (param != null && param.getIdempotent().enableProCheck()) {
+    if (param != null && param.getIdempotent().resetException()) {
       stringRedisTemplate.opsForValue().set(param.getLockKey(), "",
           idempotentTokenProperties.getExpiredTime(),
           TimeUnit.SECONDS);

@@ -7,4 +7,6 @@ import java.util.concurrent.locks.Lock;
  */
 public interface DistributedLock extends Lock {
 
+    String getLockName();
+
 }

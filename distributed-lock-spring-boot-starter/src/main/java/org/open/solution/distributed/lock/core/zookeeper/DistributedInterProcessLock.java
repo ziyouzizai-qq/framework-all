@@ -18,6 +18,8 @@ public class DistributedInterProcessLock implements DistributedLock {
 
   private final InterProcessLock lock;
 
+  private final String lockName;
+
   @SneakyThrows
   @Override
   public void lock() {
@@ -50,5 +52,10 @@ public class DistributedInterProcessLock implements DistributedLock {
   @Override
   public Condition newCondition() {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public String getLockName() {
+    return lockName;
   }
 }

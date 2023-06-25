@@ -17,7 +17,7 @@ public class IdempotentService {
   private Map<String, UiIdempotent> map = new HashMap<>();
 
   public boolean validateData(UiIdempotent uiIdempotent) {
-    return !map.containsKey(uiIdempotent.getId());
+    return map.containsKey(uiIdempotent.getId());
   }
 
   public void add(UiIdempotent uiIdempotent) {
