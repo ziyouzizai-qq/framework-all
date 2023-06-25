@@ -36,7 +36,6 @@ public class IdempotentTokenHandler extends AbstractIdempotentSceneHandler {
     if (Objects.nonNull(tokenDelFlag) && !tokenDelFlag) {
       throw new IdempotentException(param.getIdempotent().message());
     }
-
   }
 
   @Override

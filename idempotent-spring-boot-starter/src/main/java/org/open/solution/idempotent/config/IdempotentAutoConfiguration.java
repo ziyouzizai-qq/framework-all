@@ -84,8 +84,6 @@ public class IdempotentAutoConfiguration {
 
   /**
    * DLC模式幂等
-   * @param distributedLockFactory 分布式锁工厂
-   * @param spELParser spel解析器
    */
   @Bean
   public IdempotentDLCHandler idempotentDLCHandler(DistributedLockFactory distributedLockFactory,

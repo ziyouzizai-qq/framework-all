@@ -97,7 +97,7 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
       // 设置异常标记
       param.setExceptionMark(true);
       try {
-        if (param.getIdempotent().enableProCheck()) {
+        if (param.getIdempotent().resetException()) {
           stringRedisTemplate.delete(param.getLockKey());
         } else {
           consumed(param);
