@@ -8,8 +8,8 @@ import org.open.solution.idempotent.core.IdempotentException;
 import org.open.solution.idempotent.core.IdempotentValidateParam;
 import org.open.solution.idempotent.enums.IdempotentSceneEnum;
 import org.open.solution.idempotent.enums.IdempotentStateEnum;
+import org.open.solution.idempotent.toolkit.LogUtil;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 
@@ -60,7 +60,7 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
         // 1. 有另一个线程在消费.
         // 2. 有另一个线程执行业务逻辑前状态变更为CONSUMING后，还未执行业务逻辑，服务挂了，当前状态则一直到缓存过期，在这段期间
         // 后续合法的重试请求而得不到消费，因此要注意这种情况。
-        Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
+        Logger logger = LogUtil.getLog(param.getJoinPoint());
         logger.error("[{}] another task is currently being consumed.", param.getLockKey());
         throw new IdempotentException(param.getIdempotent().message());
       }
@@ -84,7 +84,7 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
           }
         }
       } catch (Throwable ex) {
-        Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
+        Logger logger = LogUtil.getLog(param.getJoinPoint());
         logger.error("[{}] Failed to set state anti-heavy token.", param.getLockKey());
       }
     }
@@ -103,7 +103,7 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
           consumed(param);
         }
       } catch (Throwable ex) {
-        Logger logger = LoggerFactory.getLogger(param.getJoinPoint().getTarget().getClass());
+        Logger logger = LogUtil.getLog(param.getJoinPoint());
         logger.error("[{}] Failed to set state anti-heavy token.", param.getLockKey());
       }
     }

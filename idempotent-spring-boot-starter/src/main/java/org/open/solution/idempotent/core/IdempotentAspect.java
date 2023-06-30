@@ -7,8 +7,8 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.open.solution.idempotent.annotation.Idempotent;
+import org.open.solution.idempotent.toolkit.LogUtil;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 
 import java.lang.reflect.Method;
@@ -39,13 +39,13 @@ public class IdempotentAspect {
       idempotentExecuteHandler.execute(joinPoint, idempotent, idempotentSceneHandler);
       return joinPoint.proceed();
     } catch (IdempotentConfigException e) {
-      Logger logger = LoggerFactory.getLogger(joinPoint.getTarget().getClass());
+      Logger logger = LogUtil.getLog(joinPoint);
       logger.error("{}() method, idempotent config exception occurred, error message：{}",
           joinPoint.getSignature().getName(),
           e.getMessage());
       throw e;
     } catch (IdempotentException e) {
-      Logger logger = LoggerFactory.getLogger(joinPoint.getTarget().getClass());
+      Logger logger = LogUtil.getLog(joinPoint);
       logger.error("{}() method, idempotent exception occurred, error message：{}",
           joinPoint.getSignature().getName(),
           e.getMessage());
