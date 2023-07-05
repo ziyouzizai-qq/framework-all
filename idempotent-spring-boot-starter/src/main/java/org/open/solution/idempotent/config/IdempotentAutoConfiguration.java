@@ -12,6 +12,7 @@ import org.open.solution.idempotent.core.scene.token.IdempotentTokenHandler;
 import org.open.solution.idempotent.core.type.token.IdempotentTokenService;
 import org.open.solution.idempotent.toolkit.SpELParser;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,6 +52,7 @@ public class IdempotentAutoConfiguration {
    * 全参数幂等器
    */
   @Bean
+  @ConditionalOnMissingBean(value = IdempotentParamExecuteHandler.class, name = "idempotentParamExecuteHandler")
   public IdempotentParamExecuteHandler idempotentParamExecuteHandler() {
     return new IdempotentParamExecuteHandler();
   }
@@ -59,6 +61,7 @@ public class IdempotentAutoConfiguration {
    * 通过spel解析，部分参数幂等器
    */
   @Bean
+  @ConditionalOnMissingBean(value = IdempotentSpELExecuteHandler.class, name = "idempotentSpELExecuteHandler")
   public IdempotentSpELExecuteHandler idempotentSpELExecuteHandler(SpELParser spELParser) {
     return new IdempotentSpELExecuteHandler(spELParser);
   }
