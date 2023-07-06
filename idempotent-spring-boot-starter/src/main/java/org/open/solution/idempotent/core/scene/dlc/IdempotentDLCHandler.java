@@ -29,7 +29,7 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
 
   private final StringRedisTemplate stringRedisTemplate;
 
-  private final static String CONSUMED = ":CONSUMED";
+  private final static String CONSUMED = "DLC:CONSUMED:";
 
   @Override
   public IdempotentSceneEnum scene() {
@@ -105,7 +105,7 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
   }
 
   private String consumedKey(String lockKey) {
-    return lockKey + CONSUMED;
+    return CONSUMED + lockKey;
   }
 
   @Builder
