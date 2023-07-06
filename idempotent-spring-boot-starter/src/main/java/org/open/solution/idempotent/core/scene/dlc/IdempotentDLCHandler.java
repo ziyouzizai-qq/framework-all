@@ -43,7 +43,7 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
         .defaultConsumed(!StringUtils.hasLength(param.getIdempotent().validateApi()))
         .build();
     IdempotentContext.put(idempotentDLCWrapper);
-    if (param.getIdempotent().enableProCheck() && validateData(idempotentDLCWrapper)) {
+    if (param.getIdempotent().enableProCheck() && lookupKey(idempotentDLCWrapper)) {
       throw new IdempotentException(param.getIdempotent().message());
     }
 
@@ -53,7 +53,7 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
     } else {
       // 将分布式锁放入上下文
       idempotentDLCWrapper.lock = lock;
-      if (validateData(idempotentDLCWrapper)) {
+      if (lookupKey(idempotentDLCWrapper)) {
         throw new IdempotentException(param.getIdempotent().message());
       }
       // 正在消费中...
@@ -92,7 +92,7 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
     }
   }
 
-  private Boolean validateData(IdempotentDLCWrapper wrapper) {
+  private Boolean lookupKey(IdempotentDLCWrapper wrapper) {
     if (wrapper.defaultConsumed) {
       // 默认消费规则
       return stringRedisTemplate.hasKey(consumedKey(wrapper.param.getLockKey()));
