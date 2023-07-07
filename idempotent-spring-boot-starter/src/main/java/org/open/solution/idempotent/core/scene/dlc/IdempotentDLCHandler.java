@@ -6,7 +6,6 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.open.solution.distributed.lock.core.DistributedLock;
 import org.open.solution.distributed.lock.core.DistributedLockFactory;
 import org.open.solution.idempotent.core.AbstractIdempotentSceneHandler;
-import org.open.solution.idempotent.core.IdempotentContext;
 import org.open.solution.idempotent.core.IdempotentException;
 import org.open.solution.idempotent.core.IdempotentValidateParam;
 import org.open.solution.idempotent.enums.IdempotentSceneEnum;
@@ -21,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  * DLC幂等处理器
  */
 @RequiredArgsConstructor
-public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
+public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler<IdempotentDLCHandler.IdempotentDLCWrapper> {
 
   private final DistributedLockFactory distributedLockFactory;
 
@@ -37,13 +36,17 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
   }
 
   @Override
-  public void validateIdempotent(IdempotentValidateParam param) {
-    IdempotentDLCWrapper idempotentDLCWrapper = IdempotentDLCWrapper.builder()
+  public IdempotentDLCWrapper putContext(IdempotentValidateParam param) {
+    return IdempotentDLCWrapper.builder()
         .param(param)
         .defaultConsumed(!StringUtils.hasLength(param.getIdempotent().validateApi()))
         .build();
-    IdempotentContext.put(idempotentDLCWrapper);
-    if (param.getIdempotent().enableProCheck() && lookupKey(idempotentDLCWrapper)) {
+  }
+
+  @Override
+  public void doValidate(IdempotentDLCWrapper data) {
+    IdempotentValidateParam param = data.param;
+    if (param.getIdempotent().enableProCheck() && lookupKey(data)) {
       throw new IdempotentException(param.getIdempotent().message());
     }
 
@@ -52,37 +55,35 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
       throw new IdempotentException(param.getIdempotent().message());
     } else {
       // 将分布式锁放入上下文
-      idempotentDLCWrapper.lock = lock;
-      if (lookupKey(idempotentDLCWrapper)) {
+      data.lock = lock;
+      if (lookupKey(data)) {
         throw new IdempotentException(param.getIdempotent().message());
       }
       // 正在消费中...
-      idempotentDLCWrapper.state = IdempotentStateEnum.CONSUMING;
+      data.state = IdempotentStateEnum.CONSUMING;
     }
   }
 
   @Override
-  public void handleProcessing(Object param) {
-    IdempotentDLCWrapper wrapper = (IdempotentDLCWrapper) param;
-    if (wrapper != null && wrapper.lock != null) {
-      if (IdempotentStateEnum.CONSUMING == wrapper.state && // 必须是正在消费的线程
-          wrapper.defaultConsumed && // 必须是默认的消费规则
-          (!wrapper.param.isExceptionMark() || !wrapper.param.getIdempotent().resetException())) {
+  public void handleProcessing(IdempotentDLCWrapper param) {
+    if (param != null && param.lock != null) {
+      if (IdempotentStateEnum.CONSUMING == param.state && // 必须是正在消费的线程
+          param.defaultConsumed && // 必须是默认的消费规则
+          (!param.param.isExceptionMark() || !param.param.getIdempotent().resetException())) {
 
         // 默认消费模式
         stringRedisTemplate.opsForValue().set(
-            consumedKey(wrapper.param.getLockKey()), IdempotentStateEnum.CONSUMED.getCode(),
-            wrapper.param.getIdempotent().consumedExpirationDate(),
+            consumedKey(param.param.getLockKey()), IdempotentStateEnum.CONSUMED.getCode(),
+            param.param.getIdempotent().consumedExpirationDate(),
             TimeUnit.SECONDS);
 
       }
-      wrapper.lock.unlock();
+      param.lock.unlock();
     }
   }
 
   @Override
-  public void exceptionProcessing() {
-    IdempotentDLCWrapper wrapper = (IdempotentDLCWrapper) IdempotentContext.get();
+  public void handleExProcessing(IdempotentDLCWrapper wrapper) {
     if (wrapper != null) {
       wrapper.param.setExceptionMark(true);
     }
@@ -105,7 +106,7 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
   }
 
   @Builder
-  private static class IdempotentDLCWrapper {
+  public static class IdempotentDLCWrapper {
 
     private IdempotentValidateParam param;
 

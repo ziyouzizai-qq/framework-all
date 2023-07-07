@@ -1,9 +1,9 @@
 package org.open.solution.idempotent.core.scene.state;
 
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.open.solution.idempotent.core.AbstractIdempotentSceneHandler;
-import org.open.solution.idempotent.core.IdempotentContext;
 import org.open.solution.idempotent.core.IdempotentException;
 import org.open.solution.idempotent.core.IdempotentValidateParam;
 import org.open.solution.idempotent.enums.IdempotentSceneEnum;
@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
  **/
 @RequiredArgsConstructor
 @Slf4j
-public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
+public class IdempotentStateHandler extends AbstractIdempotentSceneHandler<IdempotentStateHandler.IdempotentStateWrapper> {
 
   private final StringRedisTemplate stringRedisTemplate;
 
@@ -33,7 +33,13 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
   }
 
   @Override
-  public void validateIdempotent(IdempotentValidateParam param) {
+  public IdempotentStateWrapper putContext(IdempotentValidateParam param) {
+    return IdempotentStateWrapper.builder().param(param).build();
+  }
+
+  @Override
+  public void doValidate(IdempotentStateWrapper data) {
+    IdempotentValidateParam param = data.param;
     String lockKey = param.getLockKey();
 
     // 设置成功说明缓存中还没有值，但是并不能判定该请求是第一次请求，有以下几种情况
@@ -46,7 +52,7 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
 
 
     if (setIfAbsent != null && !setIfAbsent) {
-      IdempotentContext.put(null);
+      data.state = IdempotentStateEnum.CONSUMED;
       String state = stringRedisTemplate.opsForValue().get(lockKey);
 
       // state 为null的情况，以下两种情况对consumingExpirationDate的设置合理性要高，才能避免为null
@@ -65,46 +71,44 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
         throw new IdempotentException(param.getIdempotent().message());
       }
     } else {
-      IdempotentContext.put(param);
+      data.state = IdempotentStateEnum.CONSUMING;
     }
   }
 
   @Override
-  public void handleProcessing(Object param) {
-    if (param != null) {
-      IdempotentValidateParam wrapper = (IdempotentValidateParam) param;
+  public void handleProcessing(IdempotentStateWrapper param) {
+    if (param != null && param.state == IdempotentStateEnum.CONSUMING) {
       try {
         // 只处理非异常状态
-        if (!wrapper.isExceptionMark()) {
+        if (!param.param.isExceptionMark()) {
           // 根据validateIdempotent中对于null的情况，基于合理的consumingExpirationDate值，可以得出当state为null时
           // 说明当前线程执行业务逻辑时触发异常被删除，因此为了使得后续合理的重试请求可以得到继续，则保持未消费的状态。
-          String state = stringRedisTemplate.opsForValue().get(wrapper.getLockKey());
+          String state = stringRedisTemplate.opsForValue().get(param.param.getLockKey());
           if (StringUtils.hasLength(state) && IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
-            consumed(wrapper);
+            consumed(param.param);
           }
         }
       } catch (Throwable ex) {
-        Logger logger = LogUtil.getLog(wrapper.getJoinPoint());
-        logger.error("[{}] Failed to set state anti-heavy token.", wrapper.getLockKey());
+        Logger logger = LogUtil.getLog(param.param.getJoinPoint());
+        logger.error("[{}] Failed to set state anti-heavy token.", param.param.getLockKey());
       }
     }
   }
 
   @Override
-  public void exceptionProcessing() {
-    IdempotentValidateParam param = (IdempotentValidateParam) IdempotentContext.get();
-    if (param != null) {
+  public void handleExProcessing(IdempotentStateWrapper param) {
+    if (param != null && param.state == IdempotentStateEnum.CONSUMING) {
       // 设置异常标记
-      param.setExceptionMark(true);
+      param.param.setExceptionMark(true);
       try {
-        if (param.getIdempotent().resetException()) {
-          stringRedisTemplate.delete(param.getLockKey());
+        if (param.param.getIdempotent().resetException()) {
+          stringRedisTemplate.delete(param.param.getLockKey());
         } else {
-          consumed(param);
+          consumed(param.param);
         }
       } catch (Throwable ex) {
-        Logger logger = LogUtil.getLog(param.getJoinPoint());
-        logger.error("[{}] Failed to set state anti-heavy token.", param.getLockKey());
+        Logger logger = LogUtil.getLog(param.param.getJoinPoint());
+        logger.error("[{}] Failed to set state anti-heavy token.", param.param.getLockKey());
       }
     }
   }
@@ -114,5 +118,13 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
         IdempotentStateEnum.CONSUMED.getCode(),
         param.getIdempotent().consumedExpirationDate(),
         TimeUnit.SECONDS);
+  }
+
+  @Builder
+  public static class IdempotentStateWrapper {
+
+    private IdempotentValidateParam param;
+
+    private IdempotentStateEnum state;
   }
 }

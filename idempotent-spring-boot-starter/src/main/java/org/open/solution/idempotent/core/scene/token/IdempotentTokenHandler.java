@@ -3,7 +3,6 @@ package org.open.solution.idempotent.core.scene.token;
 import lombok.RequiredArgsConstructor;
 import org.open.solution.idempotent.config.IdempotentTokenProperties;
 import org.open.solution.idempotent.core.AbstractIdempotentSceneHandler;
-import org.open.solution.idempotent.core.IdempotentContext;
 import org.open.solution.idempotent.core.IdempotentException;
 import org.open.solution.idempotent.core.IdempotentValidateParam;
 import org.open.solution.idempotent.enums.IdempotentSceneEnum;
@@ -16,7 +15,7 @@ import java.util.concurrent.TimeUnit;
  * Token幂等处理器
  */
 @RequiredArgsConstructor
-public class IdempotentTokenHandler extends AbstractIdempotentSceneHandler {
+public class IdempotentTokenHandler extends AbstractIdempotentSceneHandler<IdempotentValidateParam> {
 
   private final StringRedisTemplate stringRedisTemplate;
 
@@ -28,19 +27,20 @@ public class IdempotentTokenHandler extends AbstractIdempotentSceneHandler {
   }
 
   @Override
-  public void validateIdempotent(IdempotentValidateParam param) {
-    // 后置异常处理
-    IdempotentContext.put(param);
+  public IdempotentValidateParam putContext(IdempotentValidateParam param) {
+    return param;
+  }
 
-    Boolean tokenDelFlag = stringRedisTemplate.delete(param.getLockKey());
+  @Override
+  public void doValidate(IdempotentValidateParam data) {
+    Boolean tokenDelFlag = stringRedisTemplate.delete(data.getLockKey());
     if (Objects.nonNull(tokenDelFlag) && !tokenDelFlag) {
-      throw new IdempotentException(param.getIdempotent().message());
+      throw new IdempotentException(data.getIdempotent().message());
     }
   }
 
   @Override
-  public void exceptionProcessing() {
-    IdempotentValidateParam param = (IdempotentValidateParam) IdempotentContext.get();
+  public void handleExProcessing(IdempotentValidateParam param) {
     if (param != null && param.getIdempotent().resetException()) {
       stringRedisTemplate.opsForValue().set(param.getLockKey(), "",
           idempotentTokenProperties.getExpiredTime(),
