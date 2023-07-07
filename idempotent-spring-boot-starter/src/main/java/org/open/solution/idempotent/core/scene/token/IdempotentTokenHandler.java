@@ -32,10 +32,10 @@ public class IdempotentTokenHandler extends AbstractIdempotentSceneHandler<Idemp
   }
 
   @Override
-  public void doValidate(IdempotentValidateParam wapper) {
-    Boolean tokenDelFlag = stringRedisTemplate.delete(wapper.getLockKey());
+  public void doValidate(IdempotentValidateParam wrapper) {
+    Boolean tokenDelFlag = stringRedisTemplate.delete(wrapper.getLockKey());
     if (Objects.nonNull(tokenDelFlag) && !tokenDelFlag) {
-      throw new IdempotentException(wapper.getIdempotent().message());
+      throw new IdempotentException(wrapper.getIdempotent().message());
     }
   }
 
