@@ -10,12 +10,15 @@ public abstract class AbstractIdempotentSceneHandler implements IdempotentSceneH
 
   @Override
   public void postProcessing() {
-
+    handleProcessing(IdempotentContext.removeLast());
   }
 
   @Override
   public void exceptionProcessing() {
 
+  }
+
+  public void handleProcessing(Object param) {
   }
 
 }

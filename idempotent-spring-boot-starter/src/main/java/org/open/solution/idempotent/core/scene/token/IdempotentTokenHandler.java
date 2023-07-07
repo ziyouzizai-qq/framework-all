@@ -39,11 +39,6 @@ public class IdempotentTokenHandler extends AbstractIdempotentSceneHandler {
   }
 
   @Override
-  public void postProcessing() {
-    IdempotentContext.removeLast();
-  }
-
-  @Override
   public void exceptionProcessing() {
     IdempotentValidateParam param = (IdempotentValidateParam) IdempotentContext.get();
     if (param != null && param.getIdempotent().resetException()) {

@@ -70,22 +70,22 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler {
   }
 
   @Override
-  public void postProcessing() {
-    IdempotentValidateParam param = (IdempotentValidateParam) IdempotentContext.removeLast();
+  public void handleProcessing(Object param) {
     if (param != null) {
+      IdempotentValidateParam wrapper = (IdempotentValidateParam) param;
       try {
         // 只处理非异常状态
-        if (!param.isExceptionMark()) {
+        if (!wrapper.isExceptionMark()) {
           // 根据validateIdempotent中对于null的情况，基于合理的consumingExpirationDate值，可以得出当state为null时
           // 说明当前线程执行业务逻辑时触发异常被删除，因此为了使得后续合理的重试请求可以得到继续，则保持未消费的状态。
-          String state = stringRedisTemplate.opsForValue().get(param.getLockKey());
+          String state = stringRedisTemplate.opsForValue().get(wrapper.getLockKey());
           if (StringUtils.hasLength(state) && IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
-            consumed(param);
+            consumed(wrapper);
           }
         }
       } catch (Throwable ex) {
-        Logger logger = LogUtil.getLog(param.getJoinPoint());
-        logger.error("[{}] Failed to set state anti-heavy token.", param.getLockKey());
+        Logger logger = LogUtil.getLog(wrapper.getJoinPoint());
+        logger.error("[{}] Failed to set state anti-heavy token.", wrapper.getLockKey());
       }
     }
   }

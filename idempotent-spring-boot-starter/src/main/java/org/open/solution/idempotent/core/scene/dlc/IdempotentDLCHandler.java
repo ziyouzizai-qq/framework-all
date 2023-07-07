@@ -62,25 +62,21 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler {
   }
 
   @Override
-  public void postProcessing() {
-    IdempotentDLCWrapper wrapper = null;
-    try {
-      wrapper = (IdempotentDLCWrapper) IdempotentContext.removeLast();
-    } finally {
-      if (wrapper != null && wrapper.lock != null) {
-        if (IdempotentStateEnum.CONSUMING == wrapper.state && // 必须是正在消费的线程
-            wrapper.defaultConsumed && // 必须是默认的消费规则
-            (!wrapper.param.isExceptionMark() || !wrapper.param.getIdempotent().resetException())) {
+  public void handleProcessing(Object param) {
+    IdempotentDLCWrapper wrapper = (IdempotentDLCWrapper) param;
+    if (wrapper != null && wrapper.lock != null) {
+      if (IdempotentStateEnum.CONSUMING == wrapper.state && // 必须是正在消费的线程
+          wrapper.defaultConsumed && // 必须是默认的消费规则
+          (!wrapper.param.isExceptionMark() || !wrapper.param.getIdempotent().resetException())) {
 
-          // 默认消费模式
-          stringRedisTemplate.opsForValue().set(
-              consumedKey(wrapper.param.getLockKey()), IdempotentStateEnum.CONSUMED.getCode(),
-              wrapper.param.getIdempotent().consumedExpirationDate(),
-              TimeUnit.SECONDS);
+        // 默认消费模式
+        stringRedisTemplate.opsForValue().set(
+            consumedKey(wrapper.param.getLockKey()), IdempotentStateEnum.CONSUMED.getCode(),
+            wrapper.param.getIdempotent().consumedExpirationDate(),
+            TimeUnit.SECONDS);
 
-        }
-        wrapper.lock.unlock();
       }
+      wrapper.lock.unlock();
     }
   }
 
