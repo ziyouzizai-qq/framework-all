@@ -7,6 +7,8 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.open.solution.idempotent.annotation.Idempotent;
+import org.open.solution.idempotent.ex.IdempotentConfigException;
+import org.open.solution.idempotent.ex.IdempotentException;
 import org.open.solution.idempotent.toolkit.LogUtil;
 import org.slf4j.Logger;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -51,7 +53,7 @@ public class IdempotentAspect {
           e.getMessage());
       throw e;
     } catch (Exception e) {
-      // 业务异常处理
+      // 业务异常处理,调用异常处理的线程即获取幂等性锁的线程
       idempotentSceneHandler.exceptionProcessing();
       throw e;
     } finally {

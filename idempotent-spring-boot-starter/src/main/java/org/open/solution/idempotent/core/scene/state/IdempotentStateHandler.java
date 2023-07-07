@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.open.solution.idempotent.core.AbstractIdempotentSceneHandler;
-import org.open.solution.idempotent.core.IdempotentException;
+import org.open.solution.idempotent.ex.IdempotentException;
 import org.open.solution.idempotent.core.IdempotentValidateParam;
 import org.open.solution.idempotent.enums.IdempotentSceneEnum;
 import org.open.solution.idempotent.enums.IdempotentStateEnum;

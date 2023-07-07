@@ -1,4 +1,4 @@
-package org.open.solution.idempotent.core;
+package org.open.solution.idempotent.ex;
 
 /**
  * 幂等异常

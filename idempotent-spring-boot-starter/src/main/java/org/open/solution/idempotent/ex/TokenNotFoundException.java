@@ -1,6 +1,4 @@
-package org.open.solution.idempotent.core.type.token;
-
-import org.open.solution.idempotent.core.IdempotentConfigException;
+package org.open.solution.idempotent.ex;
 
 /**
  * token不存在异常

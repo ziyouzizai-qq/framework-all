@@ -3,7 +3,7 @@ package org.open.solution.idempotent.core.scene.token;
 import lombok.RequiredArgsConstructor;
 import org.open.solution.idempotent.config.IdempotentTokenProperties;
 import org.open.solution.idempotent.core.AbstractIdempotentSceneHandler;
-import org.open.solution.idempotent.core.IdempotentException;
+import org.open.solution.idempotent.ex.IdempotentException;
 import org.open.solution.idempotent.core.IdempotentValidateParam;
 import org.open.solution.idempotent.enums.IdempotentSceneEnum;
 import org.springframework.data.redis.core.StringRedisTemplate;
