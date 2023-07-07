@@ -12,7 +12,7 @@ import java.util.LinkedList;
  **/
 public class IdempotentContext {
 
-  private static ThreadLocal<Deque<Object>> CONTEXT = new ThreadLocal<>();
+  private static final ThreadLocal<Deque<Object>> CONTEXT = new ThreadLocal<>();
 
   /**
    * 将对象缓存到当前线程中
