@@ -44,9 +44,9 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler<Idempot
   }
 
   @Override
-  public void doValidate(IdempotentDLCWrapper data) {
-    IdempotentValidateParam param = data.param;
-    if (param.getIdempotent().enableProCheck() && lookupKey(data)) {
+  public void doValidate(IdempotentDLCWrapper wrapper) {
+    IdempotentValidateParam param = wrapper.param;
+    if (param.getIdempotent().enableProCheck() && lookupKey(wrapper)) {
       throw new IdempotentException(param.getIdempotent().message());
     }
 
@@ -55,30 +55,30 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler<Idempot
       throw new IdempotentException(param.getIdempotent().message());
     } else {
       // 将分布式锁放入上下文
-      data.lock = lock;
-      if (lookupKey(data)) {
+      wrapper.lock = lock;
+      if (lookupKey(wrapper)) {
         throw new IdempotentException(param.getIdempotent().message());
       }
       // 正在消费中...
-      data.state = IdempotentStateEnum.CONSUMING;
+      wrapper.state = IdempotentStateEnum.CONSUMING;
     }
   }
 
   @Override
-  public void handleProcessing(IdempotentDLCWrapper param) {
-    if (param != null && param.lock != null) {
-      if (IdempotentStateEnum.CONSUMING == param.state && // 必须是正在消费的线程
-          param.defaultConsumed && // 必须是默认的消费规则
-          (!param.param.isExceptionMark() || !param.param.getIdempotent().resetException())) {
+  public void handleProcessing(IdempotentDLCWrapper wrapper) {
+    if (wrapper != null && wrapper.lock != null) {
+      if (IdempotentStateEnum.CONSUMING == wrapper.state && // 必须是正在消费的线程
+          wrapper.defaultConsumed && // 必须是默认的消费规则
+          (!wrapper.param.isExceptionMark() || !wrapper.param.getIdempotent().resetException())) {
 
         // 默认消费模式
         stringRedisTemplate.opsForValue().set(
-            consumedKey(param.param.getLockKey()), IdempotentStateEnum.CONSUMED.getCode(),
-            param.param.getIdempotent().consumedExpirationDate(),
+            consumedKey(wrapper.param.getLockKey()), IdempotentStateEnum.CONSUMED.getCode(),
+            wrapper.param.getIdempotent().consumedExpirationDate(),
             TimeUnit.SECONDS);
 
       }
-      param.lock.unlock();
+      wrapper.lock.unlock();
     }
   }
 

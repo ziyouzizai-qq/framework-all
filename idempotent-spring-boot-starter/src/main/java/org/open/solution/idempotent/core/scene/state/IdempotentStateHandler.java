@@ -38,8 +38,8 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler<Idemp
   }
 
   @Override
-  public void doValidate(IdempotentStateWrapper data) {
-    IdempotentValidateParam param = data.param;
+  public void doValidate(IdempotentStateWrapper wrapper) {
+    IdempotentValidateParam param = wrapper.param;
     String lockKey = param.getLockKey();
 
     // 设置成功说明缓存中还没有值，但是并不能判定该请求是第一次请求，有以下几种情况
@@ -52,7 +52,7 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler<Idemp
 
 
     if (setIfAbsent != null && !setIfAbsent) {
-      data.state = IdempotentStateEnum.CONSUMED;
+      wrapper.state = IdempotentStateEnum.CONSUMED;
       String state = stringRedisTemplate.opsForValue().get(lockKey);
 
       // state 为null的情况，以下两种情况对consumingExpirationDate的设置合理性要高，才能避免为null
@@ -71,44 +71,44 @@ public class IdempotentStateHandler extends AbstractIdempotentSceneHandler<Idemp
         throw new IdempotentException(param.getIdempotent().message());
       }
     } else {
-      data.state = IdempotentStateEnum.CONSUMING;
+      wrapper.state = IdempotentStateEnum.CONSUMING;
     }
   }
 
   @Override
-  public void handleProcessing(IdempotentStateWrapper param) {
-    if (param != null && param.state == IdempotentStateEnum.CONSUMING) {
+  public void handleProcessing(IdempotentStateWrapper wrapper) {
+    if (wrapper != null && wrapper.state == IdempotentStateEnum.CONSUMING) {
       try {
         // 只处理非异常状态
-        if (!param.param.isExceptionMark()) {
+        if (!wrapper.param.isExceptionMark()) {
           // 根据validateIdempotent中对于null的情况，基于合理的consumingExpirationDate值，可以得出当state为null时
           // 说明当前线程执行业务逻辑时触发异常被删除，因此为了使得后续合理的重试请求可以得到继续，则保持未消费的状态。
-          String state = stringRedisTemplate.opsForValue().get(param.param.getLockKey());
+          String state = stringRedisTemplate.opsForValue().get(wrapper.param.getLockKey());
           if (StringUtils.hasLength(state) && IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
-            consumed(param.param);
+            consumed(wrapper.param);
           }
         }
       } catch (Throwable ex) {
-        Logger logger = LogUtil.getLog(param.param.getJoinPoint());
-        logger.error("[{}] Failed to set state anti-heavy token.", param.param.getLockKey());
+        Logger logger = LogUtil.getLog(wrapper.param.getJoinPoint());
+        logger.error("[{}] Failed to set state anti-heavy token.", wrapper.param.getLockKey());
       }
     }
   }
 
   @Override
-  public void handleExProcessing(IdempotentStateWrapper param) {
-    if (param != null && param.state == IdempotentStateEnum.CONSUMING) {
+  public void handleExProcessing(IdempotentStateWrapper wrapper) {
+    if (wrapper != null && wrapper.state == IdempotentStateEnum.CONSUMING) {
       // 设置异常标记
-      param.param.setExceptionMark(true);
+      wrapper.param.setExceptionMark(true);
       try {
-        if (param.param.getIdempotent().resetException()) {
-          stringRedisTemplate.delete(param.param.getLockKey());
+        if (wrapper.param.getIdempotent().resetException()) {
+          stringRedisTemplate.delete(wrapper.param.getLockKey());
         } else {
-          consumed(param.param);
+          consumed(wrapper.param);
         }
       } catch (Throwable ex) {
-        Logger logger = LogUtil.getLog(param.param.getJoinPoint());
-        logger.error("[{}] Failed to set state anti-heavy token.", param.param.getLockKey());
+        Logger logger = LogUtil.getLog(wrapper.param.getJoinPoint());
+        logger.error("[{}] Failed to set state anti-heavy token.", wrapper.param.getLockKey());
       }
     }
   }

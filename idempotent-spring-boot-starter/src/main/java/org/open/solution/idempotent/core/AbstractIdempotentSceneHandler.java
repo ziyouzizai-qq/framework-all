@@ -10,13 +10,13 @@ public abstract class AbstractIdempotentSceneHandler<D> implements IdempotentSce
 
   public abstract D putContext(IdempotentValidateParam param);
 
-  public abstract void doValidate(D data);
+  public abstract void doValidate(D wrapper);
 
   @Override
   public void validateIdempotent(IdempotentValidateParam param) {
-    D data = putContext(param);
-    IdempotentContext.put(data);
-    doValidate(data);
+    D wrapper = putContext(param);
+    IdempotentContext.put(wrapper);
+    doValidate(wrapper);
   }
 
   @Override
@@ -31,10 +31,10 @@ public abstract class AbstractIdempotentSceneHandler<D> implements IdempotentSce
     handleExProcessing((D) IdempotentContext.get());
   }
 
-  public void handleProcessing(D param) {
+  public void handleProcessing(D wrapper) {
   }
 
-  public void handleExProcessing(D param) {
+  public void handleExProcessing(D wrapper) {
   }
 
 }
