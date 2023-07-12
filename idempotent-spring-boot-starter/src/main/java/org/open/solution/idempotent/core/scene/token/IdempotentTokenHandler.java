@@ -1,5 +1,6 @@
 package org.open.solution.idempotent.core.scene.token;
 
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.open.solution.idempotent.config.IdempotentTokenProperties;
 import org.open.solution.idempotent.core.AbstractIdempotentSceneHandler;
@@ -15,7 +16,8 @@ import java.util.concurrent.TimeUnit;
  * Token幂等处理器
  */
 @RequiredArgsConstructor
-public class IdempotentTokenHandler extends AbstractIdempotentSceneHandler<IdempotentValidateParam> {
+public class IdempotentTokenHandler
+    extends AbstractIdempotentSceneHandler<IdempotentTokenHandler.IdempotentTokenWrapper> {
 
   private final StringRedisTemplate stringRedisTemplate;
 
@@ -27,24 +29,38 @@ public class IdempotentTokenHandler extends AbstractIdempotentSceneHandler<Idemp
   }
 
   @Override
-  public IdempotentValidateParam putContext(IdempotentValidateParam param) {
-    return param;
+  public IdempotentTokenWrapper putContext(IdempotentValidateParam param) {
+    return IdempotentTokenWrapper.builder()
+        .lockKey(param.getLockKey())
+        .resetException(param.getIdempotent().resetException())
+        .message(param.getIdempotent().message())
+        .build();
   }
 
   @Override
-  public void doValidate(IdempotentValidateParam wrapper) {
-    Boolean tokenDelFlag = stringRedisTemplate.delete(wrapper.getLockKey());
+  public void doValidate(IdempotentTokenWrapper wrapper) {
+    Boolean tokenDelFlag = stringRedisTemplate.delete(wrapper.lockKey);
     if (Objects.nonNull(tokenDelFlag) && !tokenDelFlag) {
-      throw new IdempotentException(wrapper.getIdempotent().message());
+      throw new IdempotentException(wrapper.message);
     }
   }
 
   @Override
-  public void handleExProcessing(IdempotentValidateParam param) {
-    if (param.getIdempotent().resetException()) {
-      stringRedisTemplate.opsForValue().set(param.getLockKey(), "",
+  public void handleExProcessing(IdempotentTokenWrapper wrapper) {
+    if (wrapper.resetException) {
+      stringRedisTemplate.opsForValue().set(wrapper.lockKey, "",
           idempotentTokenProperties.getExpiredTime(),
           TimeUnit.SECONDS);
     }
+  }
+
+  @Builder
+  public static class IdempotentTokenWrapper {
+
+    private String lockKey;
+
+    private boolean resetException;
+
+    private String message;
   }
 }
