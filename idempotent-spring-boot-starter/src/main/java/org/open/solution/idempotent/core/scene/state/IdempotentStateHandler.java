@@ -8,8 +8,6 @@ import org.open.solution.idempotent.ex.IdempotentException;
 import org.open.solution.idempotent.core.IdempotentValidateParam;
 import org.open.solution.idempotent.enums.IdempotentSceneEnum;
 import org.open.solution.idempotent.enums.IdempotentStateEnum;
-import org.open.solution.idempotent.toolkit.LogUtil;
-import org.slf4j.Logger;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 
@@ -56,10 +54,15 @@ public class IdempotentStateHandler
       wrapper.state = IdempotentStateEnum.CONSUMED;
       String state = stringRedisTemplate.opsForValue().get(lockKey);
 
-      // state 为null的情况，以下两种情况对consumingExpirationDate的设置合理性要高，才能避免为null
-      // 1.上面设置超时运行到此处正好过期，这种情况不可能，consumingExpirationDate为业务逻辑时间要长，而且这几行代码没有耗时，除非redis极慢
-      // 2.被其他线程调用exceptionProcessing，也不会，正常情况如果consumingExpirationDate值合理，异常后都是当前线程来调用，然而exceptionProcessing在当前方法后面执行
-      // 因此这种情况也很少出现
+
+      if (state == null) {
+        // state 为null的情况，以下两种情况对consumingExpirationDate的设置合理性要高，才能避免为null
+        // 1.上面设置超时运行到此处正好过期，这种情况不可能，consumingExpirationDate为业务逻辑时间要长，而且这几行代码没有耗时，除非redis极慢
+        // 2.被其他线程调用exceptionProcessing，也不会，正常情况如果consumingExpirationDate值合理，异常后都是当前线程来调用，然而exceptionProcessing在当前方法后面执行
+        // 因此这种情况也很少出现
+        wrapper.param.getLogger().warn("[{}] this key suddenly disappeared.", param.getLockKey());
+      }
+
       if (IdempotentStateEnum.CONSUMED.getCode().equals(state)) {
         throw new IdempotentException(param.getIdempotent().message());
       } else if (IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
@@ -67,8 +70,7 @@ public class IdempotentStateHandler
         // 1. 有另一个线程在消费.
         // 2. 有另一个线程执行业务逻辑前状态变更为CONSUMING后，还未执行业务逻辑，服务挂了，当前状态则一直到缓存过期，在这段期间
         // 后续合法的重试请求而得不到消费，因此要注意这种情况。
-        Logger logger = LogUtil.getLog(param.getJoinPoint());
-        logger.error("[{}] another task is currently being consumed.", param.getLockKey());
+        wrapper.param.getLogger().error("[{}] another task is currently being consumed.", param.getLockKey());
         throw new IdempotentException(param.getIdempotent().message());
       }
     } else {
@@ -90,8 +92,7 @@ public class IdempotentStateHandler
           }
         }
       } catch (Throwable ex) {
-        Logger logger = LogUtil.getLog(wrapper.param.getJoinPoint());
-        logger.error("[{}] Failed to set state anti-heavy token.", wrapper.param.getLockKey());
+        wrapper.param.getLogger().error("[{}] Failed to set state anti-heavy token.", wrapper.param.getLockKey());
       }
     }
   }
@@ -108,8 +109,7 @@ public class IdempotentStateHandler
           consumed(wrapper.param);
         }
       } catch (Throwable ex) {
-        Logger logger = LogUtil.getLog(wrapper.param.getJoinPoint());
-        logger.error("[{}] Failed to set state anti-heavy token.", wrapper.param.getLockKey());
+        wrapper.param.getLogger().error("[{}] Failed to set state anti-heavy token.", wrapper.param.getLockKey());
       }
     }
   }

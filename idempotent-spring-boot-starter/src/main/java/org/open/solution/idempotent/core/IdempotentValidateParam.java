@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.open.solution.idempotent.annotation.Idempotent;
+import org.slf4j.Logger;
 
 /**
  * 幂等参数包装
@@ -31,5 +32,10 @@ public class IdempotentValidateParam {
    * 异常标记
    */
   private boolean exceptionMark;
+
+  /**
+   * 日志
+   */
+  private Logger logger;
 
 }

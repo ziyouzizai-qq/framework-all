@@ -2,6 +2,7 @@ package org.open.solution.idempotent.core;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.open.solution.idempotent.annotation.Idempotent;
+import org.open.solution.idempotent.toolkit.LogUtil;
 
 /**
  * AbstractIdempotentTypeHandler
@@ -28,6 +29,7 @@ public abstract class AbstractIdempotentTypeHandler implements IdempotentExecute
     // 模板方法模式：构建幂等参数包装器
     IdempotentValidateParam idempotentValidateParam = IdempotentValidateParam.builder()
         .joinPoint(joinPoint)
+        .logger(LogUtil.getLog(joinPoint))
         .idempotent(idempotent).build();
     buildValidateParam(idempotentValidateParam);
     idempotentLevelHandler.validateIdempotent(idempotentValidateParam);
