@@ -2,6 +2,7 @@ package org.open.solution.idempotent.core.scene.dlc;
 
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.open.solution.distributed.lock.core.DistributedLock;
 import org.open.solution.distributed.lock.core.DistributedLockFactory;
@@ -38,26 +39,31 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler<Idempot
   @Override
   public IdempotentDLCWrapper putContext(IdempotentValidateParam param) {
     return IdempotentDLCWrapper.builder()
-        .param(param)
+        .lockKey(param.getLockKey())
+        .joinPoint(param.getJoinPoint())
+        .enableProCheck(param.getIdempotent().enableProCheck())
+        .message(param.getIdempotent().message())
+        .resetException(param.getIdempotent().resetException())
+        .validateApi(param.getIdempotent().validateApi())
         .defaultConsumed(!StringUtils.hasLength(param.getIdempotent().validateApi()))
+        .consumedExpirationDate(param.getIdempotent().consumedExpirationDate())
         .build();
   }
 
   @Override
   public void doValidate(IdempotentDLCWrapper wrapper) {
-    IdempotentValidateParam param = wrapper.param;
-    if (param.getIdempotent().enableProCheck() && lookupKey(wrapper)) {
-      throw new IdempotentException(param.getIdempotent().message());
+    if (wrapper.enableProCheck && lookupKey(wrapper)) {
+      throw new IdempotentException(wrapper.message);
     }
 
-    DistributedLock lock = distributedLockFactory.getLock(param.getLockKey());
+    DistributedLock lock = distributedLockFactory.getLock(wrapper.lockKey);
     if (!lock.tryLock()) {
-      throw new IdempotentException(param.getIdempotent().message());
+      throw new IdempotentException(wrapper.message);
     } else {
       // 将分布式锁放入上下文
       wrapper.lock = lock;
       if (lookupKey(wrapper)) {
-        throw new IdempotentException(param.getIdempotent().message());
+        throw new IdempotentException(wrapper.message);
       }
       // 正在消费中...
       wrapper.state = IdempotentStateEnum.CONSUMING;
@@ -69,12 +75,12 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler<Idempot
     if (wrapper != null && wrapper.lock != null) {
       if (IdempotentStateEnum.CONSUMING == wrapper.state && // 必须是正在消费的线程
           wrapper.defaultConsumed && // 必须是默认的消费规则
-          (!wrapper.param.isExceptionMark() || !wrapper.param.getIdempotent().resetException())) {
+          (!wrapper.exceptionMark || !wrapper.resetException)) {
 
         // 默认消费模式
         stringRedisTemplate.opsForValue().set(
-            consumedKey(wrapper.param.getLockKey()), IdempotentStateEnum.CONSUMED.getCode(),
-            wrapper.param.getIdempotent().consumedExpirationDate(),
+            consumedKey(wrapper.lockKey), IdempotentStateEnum.CONSUMED.getCode(),
+            wrapper.consumedExpirationDate,
             TimeUnit.SECONDS);
 
       }
@@ -85,19 +91,19 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler<Idempot
   @Override
   public void handleExProcessing(IdempotentDLCWrapper wrapper) {
     if (wrapper != null) {
-      wrapper.param.setExceptionMark(true);
+      wrapper.exceptionMark = true;
     }
   }
 
   private Boolean lookupKey(IdempotentDLCWrapper wrapper) {
     if (wrapper.defaultConsumed) {
       // 默认消费规则
-      return stringRedisTemplate.hasKey(consumedKey(wrapper.param.getLockKey()));
+      return stringRedisTemplate.hasKey(consumedKey(wrapper.lockKey));
     } else {
       // 执行业务层校验接口
-      return (Boolean) spELParser.parse(wrapper.param.getIdempotent().validateApi(),
-          ((MethodSignature) wrapper.param.getJoinPoint().getSignature()).getMethod(),
-          wrapper.param.getJoinPoint().getArgs());
+      return (Boolean) spELParser.parse(wrapper.validateApi,
+          ((MethodSignature) wrapper.joinPoint.getSignature()).getMethod(),
+          wrapper.joinPoint.getArgs());
     }
   }
 
@@ -108,15 +114,26 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler<Idempot
   @Builder
   public static class IdempotentDLCWrapper {
 
-    private IdempotentValidateParam param;
-
     private DistributedLock lock;
 
     private IdempotentStateEnum state;
 
-    /**
-     * 是否为默认消费
-     */
+    private boolean exceptionMark;
+
     private boolean defaultConsumed;
+
+    private boolean enableProCheck;
+
+    private String validateApi;
+
+    private String lockKey;
+
+    private boolean resetException;
+
+    private ProceedingJoinPoint joinPoint;
+
+    private long consumedExpirationDate;
+
+    private String message;
   }
 }
