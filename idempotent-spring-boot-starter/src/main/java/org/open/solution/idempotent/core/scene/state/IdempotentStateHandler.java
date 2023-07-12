@@ -87,7 +87,7 @@ public class IdempotentStateHandler
 
   @Override
   public void handleProcessing(IdempotentStateWrapper wrapper) {
-    if (wrapper != null && wrapper.state == IdempotentStateEnum.CONSUMING) {
+    if (wrapper.state == IdempotentStateEnum.CONSUMING) {
       try {
         // 只处理非异常状态
         if (!wrapper.exceptionMark) {
@@ -113,7 +113,7 @@ public class IdempotentStateHandler
 
   @Override
   public void handleExProcessing(IdempotentStateWrapper wrapper) {
-    if (wrapper != null && wrapper.state == IdempotentStateEnum.CONSUMING) {
+    if (wrapper.state == IdempotentStateEnum.CONSUMING) {
       // 设置异常标记
       wrapper.exceptionMark = true;
       try {

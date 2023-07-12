@@ -72,7 +72,7 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler<Idempot
 
   @Override
   public void handleProcessing(IdempotentDLCWrapper wrapper) {
-    if (wrapper != null && wrapper.lock != null) {
+    if (wrapper.lock != null) {
       if (IdempotentStateEnum.CONSUMING == wrapper.state && // 必须是正在消费的线程
           wrapper.defaultConsumed && // 必须是默认的消费规则
           (!wrapper.exceptionMark || !wrapper.resetException)) {
@@ -90,9 +90,7 @@ public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler<Idempot
 
   @Override
   public void handleExProcessing(IdempotentDLCWrapper wrapper) {
-    if (wrapper != null) {
-      wrapper.exceptionMark = true;
-    }
+    wrapper.exceptionMark = true;
   }
 
   private Boolean lookupKey(IdempotentDLCWrapper wrapper) {
