@@ -1,7 +1,11 @@
 package org.open.solution.idempotent.config;
 
 import org.open.solution.distributed.lock.core.DistributedLockFactory;
-import org.open.solution.idempotent.core.*;
+import org.open.solution.idempotent.core.IdempotentAspect;
+import org.open.solution.idempotent.core.IdempotentExecuteHandler;
+import org.open.solution.idempotent.core.IdempotentExecuteHandlerFactory;
+import org.open.solution.idempotent.core.IdempotentSceneHandler;
+import org.open.solution.idempotent.core.IdempotentSceneHandlerFactory;
 import org.open.solution.idempotent.core.scene.dlc.IdempotentDLCHandler;
 import org.open.solution.idempotent.core.scene.state.IdempotentStateHandler;
 import org.open.solution.idempotent.core.type.param.IdempotentParamExecuteHandler;
