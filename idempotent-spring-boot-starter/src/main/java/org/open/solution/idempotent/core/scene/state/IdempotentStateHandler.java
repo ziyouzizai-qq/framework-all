@@ -87,23 +87,21 @@ public class IdempotentStateHandler
 
   @Override
   public void handleProcessing(IdempotentStateWrapper wrapper) {
-    if (wrapper.state == IdempotentStateEnum.CONSUMING) {
+    if (wrapper.state == IdempotentStateEnum.CONSUMING && !wrapper.exceptionMark) {
       try {
         // 只处理非异常状态
-        if (!wrapper.exceptionMark) {
-          // 根据validateIdempotent中对于null的情况，基于合理的consumingExpirationDate值，可以得出当state为null时
-          // 说明当前线程执行业务逻辑时触发异常被删除，因此为了使得后续合理的重试请求可以得到继续，则保持未消费的状态。
-          String state = stringRedisTemplate.opsForValue().get(wrapper.lockKey);
+        // 根据validateIdempotent中对于null的情况，基于合理的consumingExpirationDate值，可以得出当state为null时
+        // 说明当前线程执行业务逻辑时触发异常被删除，因此为了使得后续合理的重试请求可以得到继续，则保持未消费的状态。
+        String state = stringRedisTemplate.opsForValue().get(wrapper.lockKey);
 
-          if (!StringUtils.hasLength(state)) {
-            wrapper.logger.warn("[{}] this key consumption period is too short.", wrapper.lockKey);
-          }
+        if (!StringUtils.hasLength(state)) {
+          wrapper.logger.warn("[{}] this key consumption period is too short.", wrapper.lockKey);
+        }
 
-          if (IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
-            consumed(wrapper);
-          } else if (IdempotentStateEnum.CONSUMED.getCode().equals(state)) {
-            wrapper.logger.error("[{}] this key already consumed.", wrapper.lockKey);
-          }
+        if (IdempotentStateEnum.CONSUMING.getCode().equals(state)) {
+          consumed(wrapper);
+        } else if (IdempotentStateEnum.CONSUMED.getCode().equals(state)) {
+          wrapper.logger.error("[{}] this key already consumed.", wrapper.lockKey);
         }
       } catch (Throwable ex) {
         wrapper.logger.error("[{}] Failed to set state anti-heavy token.", wrapper.lockKey);
