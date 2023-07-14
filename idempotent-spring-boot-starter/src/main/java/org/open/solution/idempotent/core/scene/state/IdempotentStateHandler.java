@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
  **/
 @RequiredArgsConstructor
 @Slf4j
-public class IdempotentStateHandler
+public final class IdempotentStateHandler
     extends AbstractIdempotentSceneHandler<IdempotentStateHandler.IdempotentStateWrapper> {
 
   private final StringRedisTemplate stringRedisTemplate;

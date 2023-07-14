@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  * Token幂等处理器
  */
 @RequiredArgsConstructor
-public class IdempotentTokenHandler
+public final class IdempotentTokenHandler
     extends AbstractIdempotentSceneHandler<IdempotentTokenHandler.IdempotentTokenWrapper> {
 
   private final StringRedisTemplate stringRedisTemplate;

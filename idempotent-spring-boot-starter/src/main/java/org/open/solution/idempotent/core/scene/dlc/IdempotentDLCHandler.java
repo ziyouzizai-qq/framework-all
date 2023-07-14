@@ -21,7 +21,8 @@ import java.util.concurrent.TimeUnit;
  * DLC幂等处理器
  */
 @RequiredArgsConstructor
-public class IdempotentDLCHandler extends AbstractIdempotentSceneHandler<IdempotentDLCHandler.IdempotentDLCWrapper> {
+public final class IdempotentDLCHandler
+    extends AbstractIdempotentSceneHandler<IdempotentDLCHandler.IdempotentDLCWrapper> {
 
   private final DistributedLockFactory distributedLockFactory;
 
