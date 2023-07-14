@@ -8,13 +8,13 @@ package org.open.solution.idempotent.core;
  **/
 public abstract class AbstractIdempotentSceneHandler<WRAPPER> implements IdempotentSceneHandler {
 
-  public abstract WRAPPER putContext(IdempotentValidateParam param);
+  public abstract WRAPPER generateWrapper(IdempotentValidateParam param);
 
   public abstract void doValidate(WRAPPER wrapper);
 
   @Override
   public void validateIdempotent(IdempotentValidateParam param) {
-    WRAPPER wrapper = putContext(param);
+    WRAPPER wrapper = generateWrapper(param);
     IdempotentContext.put(wrapper);
     doValidate(wrapper);
   }

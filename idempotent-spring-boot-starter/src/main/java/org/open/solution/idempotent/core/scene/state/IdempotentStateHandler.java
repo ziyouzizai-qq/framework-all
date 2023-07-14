@@ -33,7 +33,7 @@ public final class IdempotentStateHandler
   }
 
   @Override
-  public IdempotentStateWrapper putContext(IdempotentValidateParam param) {
+  public IdempotentStateWrapper generateWrapper(IdempotentValidateParam param) {
     return IdempotentStateWrapper.builder()
         .lockKey(param.getLockKey())
         .consumingExpirationDate(param.getIdempotent().consumingExpirationDate())

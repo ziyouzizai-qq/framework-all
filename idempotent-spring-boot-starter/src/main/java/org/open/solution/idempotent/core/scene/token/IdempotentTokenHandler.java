@@ -29,7 +29,7 @@ public final class IdempotentTokenHandler
   }
 
   @Override
-  public IdempotentTokenWrapper putContext(IdempotentValidateParam param) {
+  public IdempotentTokenWrapper generateWrapper(IdempotentValidateParam param) {
     return IdempotentTokenWrapper.builder()
         .lockKey(param.getLockKey())
         .resetException(param.getIdempotent().resetException())

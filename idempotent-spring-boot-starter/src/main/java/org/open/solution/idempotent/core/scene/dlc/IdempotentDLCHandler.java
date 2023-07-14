@@ -38,7 +38,7 @@ public final class IdempotentDLCHandler
   }
 
   @Override
-  public IdempotentDLCWrapper putContext(IdempotentValidateParam param) {
+  public IdempotentDLCWrapper generateWrapper(IdempotentValidateParam param) {
     return IdempotentDLCWrapper.builder()
         .lockKey(param.getLockKey())
         .joinPoint(param.getJoinPoint())
