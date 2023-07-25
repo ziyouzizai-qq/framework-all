@@ -17,8 +17,6 @@ public class DistributedRLock implements DistributedLock {
 
   private final RLock lock;
 
-  private final String lockName;
-
   @Override
   public void lock() {
     lock.lock();
@@ -51,6 +49,6 @@ public class DistributedRLock implements DistributedLock {
 
   @Override
   public String getLockName() {
-    return lockName;
+    return lock.getName();
   }
 }
