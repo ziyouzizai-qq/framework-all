@@ -3,12 +3,15 @@ package org.open.solution.distributed.lock.config;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.open.solution.distributed.lock.core.DistributedLockAspect;
 import org.open.solution.distributed.lock.core.DistributedLockClient;
 import org.open.solution.distributed.lock.core.DistributedLockFactory;
 import org.open.solution.distributed.lock.core.redis.DistributedRedissonClient;
 import org.open.solution.distributed.lock.core.zookeeper.DistributedCuratorFrameworkClient;
+import org.open.solution.distributed.lock.toolkit.SpELParser;
 import org.redisson.api.RedissonClient;
 import org.redisson.spring.starter.RedissonAutoConfiguration;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -27,6 +30,16 @@ public class DistributedLockAutoConfiguration {
   @Bean
   public DistributedLockFactory distributedLockFactory(DistributedLockClient distributedLockClient) {
     return new DistributedLockFactory(distributedLockClient);
+  }
+
+  @Bean
+  public DistributedLockAspect distributedLockAspect(DistributedLockFactory distributedLockFactory, SpELParser spELParser) {
+    return new DistributedLockAspect(distributedLockFactory, spELParser);
+  }
+
+  @Bean
+  public SpELParser spELParser(BeanFactory beanFactory) {
+    return new SpELParser(beanFactory);
   }
 
   @Configuration

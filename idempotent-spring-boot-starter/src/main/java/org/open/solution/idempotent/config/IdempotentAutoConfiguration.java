@@ -1,6 +1,7 @@
 package org.open.solution.idempotent.config;
 
 import org.open.solution.distributed.lock.core.DistributedLockFactory;
+import org.open.solution.distributed.lock.toolkit.SpELParser;
 import org.open.solution.idempotent.core.IdempotentAspect;
 import org.open.solution.idempotent.core.IdempotentExecuteHandler;
 import org.open.solution.idempotent.core.IdempotentExecuteHandlerFactory;
@@ -14,8 +15,6 @@ import org.open.solution.idempotent.core.type.token.IdempotentTokenController;
 import org.open.solution.idempotent.core.type.token.IdempotentTokenExecuteHandler;
 import org.open.solution.idempotent.core.scene.token.IdempotentTokenHandler;
 import org.open.solution.idempotent.core.type.token.IdempotentTokenService;
-import org.open.solution.idempotent.toolkit.SpELParser;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -114,14 +113,6 @@ public class IdempotentAutoConfiguration {
   @Bean
   public IdempotentStateHandler idempotentStateHandler(StringRedisTemplate stringRedisTemplate) {
     return new IdempotentStateHandler(stringRedisTemplate);
-  }
-
-  /**
-   * spel解析器
-   */
-  @Bean
-  public SpELParser spELParser(BeanFactory beanFactory) {
-    return new SpELParser(beanFactory);
   }
 
   /**
