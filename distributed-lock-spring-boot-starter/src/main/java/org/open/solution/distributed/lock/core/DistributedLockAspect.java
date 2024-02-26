@@ -43,8 +43,9 @@ public class DistributedLockAspect {
     } catch (Exception e) {
       MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
       Logger logger =  LoggerFactory.getLogger(methodSignature.getDeclaringType());
-      logger.error("{}() method, distributed lock exception occurred, error message：{}",
+      logger.error("{}() method, distributed lock name [{}] exception occurred, error message：{}",
           joinPoint.getSignature().getName(),
+          lock.getLockName(),
           e.getMessage());
       throw e;
     } finally {
